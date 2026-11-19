@@ -67,8 +67,22 @@ def decir(texto):
         pass
 
 
+def _env(nombre: str) -> str | None:
+    """Variable de entorno; si la terminal no la tiene (p. ej. abierta antes de guardarla),
+    se lee de las variables de usuario de Windows."""
+    v = os.environ.get(nombre)
+    if v or sys.platform != "win32":
+        return v
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
+            return winreg.QueryValueEx(k, nombre)[0]
+    except OSError:
+        return None
+
+
 def familia(texto):
-    tok, chat = os.environ.get("TELEGRAM_TOKEN"), os.environ.get("TELEGRAM_CHAT")
+    tok, chat = _env("TELEGRAM_TOKEN"), _env("TELEGRAM_CHAT")
     if tok and chat:
         try:
             data = urllib.parse.urlencode({"chat_id": chat, "text": texto}).encode()
