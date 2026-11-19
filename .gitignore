@@ -1,0 +1,15 @@
+# Local o pesado: no va al repositorio
+# simulador de ensayo (clon aparte del fork; el codigo nuestro esta en simulador/)
+lerobot/
+# cache de Hugging Face: datasets, modelos, calibraciones
+hf_cache/
+_descargas/
+outputs/
+piezas/_anteriores/
+# calibracion de la camara del puesto
+orquestador/esperanza_real.json
+__pycache__/
+*.pyc
+.env
+# notas privadas (datos personales)
+CLAUDE.md
