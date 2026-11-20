@@ -99,7 +99,8 @@ def main():
             time.sleep(1.0)
             img = cam.foto()
             _, _, _, cubs = leer_escena(img, mesa, cfg)
-            llego = any(mesa.zona_de(c) == destino for c in cubs)
+            # la tapa sale desplazada por paralaje: se acepta con mas margen que el laser
+            llego = any(mesa.zona_de(c, margen=cfg["cubilete"].get("margen_zona", 1.6)) == destino for c in cubs)
             detalle = "ok" if llego else ("lerobot-rollout fallo" if rc else "el cubilete no esta en la zona")
             apuntar(destino, llego, detalle)
             print(f"Resultado: {'ACIERTO' if llego else 'FALLO'} ({detalle}). Apuntado en {RESULTADOS}")

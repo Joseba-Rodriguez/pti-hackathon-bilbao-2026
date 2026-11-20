@@ -34,7 +34,9 @@
     "tapa": "clara",
     "umbral_gris": 150,
     "area_min_cm2": 6,
-    "area_max_cm2": 45
+    "area_max_cm2": 45,
+    "margen_zona": 1.6,
+    "margen_borde_cm": 2
   },
 
   "robot": {

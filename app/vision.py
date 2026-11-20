@@ -86,8 +86,10 @@ class Mesa:
     def dentro(self, cm) -> bool:
         return 0 <= cm[0] <= self.ancho and 0 <= cm[1] <= self.alto
 
-    def zona_de(self, cm, incluir_inicio=False) -> str | None:
-        best, dmin = None, self.radio
+    def zona_de(self, cm, incluir_inicio=False, margen=1.0) -> str | None:
+        """Zona en la que cae un punto. ``margen`` multiplica el radio (para la tapa del cubilete,
+        que por estar 5,5 cm por encima de la mesa aparece desplazada en el mapa: paralaje)."""
+        best, dmin = None, self.radio * margen
         for k, c in self.zonas.items():
             if k == "INICIO" and not incluir_inicio:
                 continue
