@@ -38,6 +38,9 @@ except Exception:
     POLIGONO = None
 AREA_MAX = MARCA.get("area_max_px", 60)      # manchas mayores (base naranja...) no son el laser
 RADIO = MARCA.get("radio_px", 12)            # tamano del circulo dibujado
+ROJIZO = MARCA.get("rojizo", 35)             # rojo - max(verde, azul) para considerar "pieza del brazo"
+AREA_BRAZO = MARCA.get("area_brazo_px", 250) # mancha rojiza mayor que esto = brazo (el laser es ~10-60 px)
+MARGEN_BRAZO = MARCA.get("margen_brazo_px", 4)  # el laser debe estar al menos a ~4 px del brazo
 
 
 def buscar_laser(bgr: np.ndarray):
@@ -54,6 +57,16 @@ def buscar_laser(bgr: np.ndarray):
         mask &= dentro
     if not mask.any():
         return None
+    if not mask.any():
+        return None
+    # el BRAZO: todo lo rojizo/naranja aunque sea apagado, engordado unos pixeles. Si un
+    # candidato cae en una mancha rojiza GRANDE, es una pieza del brazo, no el laser.
+    rojizo = ((score > ROJIZO) & (r > 60)).astype(np.uint8)
+    rojizo = cv2.dilate(rojizo, np.ones((2 * MARGEN_BRAZO + 1,) * 2, np.uint8))
+    nr, lab_r, st_r, _ = cv2.connectedComponentsWithStats(rojizo)
+    grande = np.zeros(nr, bool)
+    grande[1:] = st_r[1:, cv2.CC_STAT_AREA] > AREA_BRAZO
+    mask[grande[lab_r]] = 0
     mask = cv2.dilate(mask, np.ones((3, 3), np.uint8))
     n, lab, stats, cent = cv2.connectedComponentsWithStats(mask)
     best = None

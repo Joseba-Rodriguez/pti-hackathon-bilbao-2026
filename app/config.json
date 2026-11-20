@@ -59,6 +59,9 @@
     "umbral": 80,
     "brillo_min": 190,
     "area_max_px": 60,
-    "radio_px": 12
+    "radio_px": 12,
+    "rojizo": 35,
+    "area_brazo_px": 250,
+    "margen_brazo_px": 4
   }
 }

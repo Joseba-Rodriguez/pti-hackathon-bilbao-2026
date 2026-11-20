@@ -52,7 +52,10 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
   naranja** del robot en la mitad de los fotogramas. Arreglo: detectar solo picos pequeños
   (top-hat) con rojo > 190. `pti_coger_v4` quedó vacío.
 - Error al grabar: "Input voltage error" en el servo 6 del **leader** → revisar su fuente de 5 V.
-- Se quita la cartulina: fondo = mesa blanca. Se graba todo de nuevo en `pti_coger_v5`.
+- Se quita la cartulina: fondo = mesa blanca. `pti_coger_v5` descartado: círculos falsos sobre
+  el propio brazo (naranja) en 158 de 935 fotogramas. Arreglo: si el punto rojo está pegado a una
+  mancha rojiza grande (> 250 px, el brazo), se descarta. Probado: 0 falsos en esos 935 fotogramas
+  y un láser pegado en la mesa se detecta 19 de 19. Se graba en `pti_coger_v6`.
 
 ## Tabla de resultados
 
