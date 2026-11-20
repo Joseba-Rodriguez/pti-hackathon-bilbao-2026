@@ -1,59 +1,38 @@
-# Esperanza
+# Apunta y el robot lo lleva
 
-**Un cargador de tomas y dos movimientos aprendidos.** Equipo **PTI** · Physical AI Hackathon Bilbao 2026 · SO-101 + LeRobot 0.7.0.
+**Equipo PTI** · Physical AI Hackathon Bilbao 2026 · SO-101 + LeRobot 0.7.0
 
-La familia carga la semana en vasitos ya rellenados, en orden, en una rampa impresa en 3D. A la hora
-de cada toma, el brazo **entrega** el primer vasito en una marca verde. La cámara comprueba que es la
-toma que toca, Esperanza se la toma y la cámara comprueba que vuelve vacío. El brazo lo **recoge** a
-una caja y la familia recibe un mensaje. Sin electrónica añadida: la rampa es una pieza de plástico.
+Apuntas con un láser a un sitio de la mesa y el brazo SO-101 lleva allí el cubilete.
+La cámara del puesto convierte la mesa en un **mapa virtual** en centímetros: ve los cubiletes,
+el punto del láser y las zonas. El movimiento lo hacen **políticas ACT entrenadas con
+demostraciones** teleoperadas.
 
-> Concepto de demostración. **No es un dispositivo médico.**
-
-![Montaje de la rampa con los vasitos](docs/img/montaje.png)
+![Mapa virtual](docs/img/mapa_virtual.png)
 
 ## Por dónde empezar
 
-| Si eres... | Lee esto |
-| --- | --- |
-| Cualquiera del equipo | [docs/HACKATON.md](docs/HACKATON.md): el plan del fin de semana, paso a paso, con todos los comandos |
-| Quien imprime | [`piezas/stl/`](piezas/stl): rampa, vasito y probeta. Primero la probeta |
-| Quien integra (voz, cámara, Telegram) | [`orquestador/esperanza_real.py`](orquestador/esperanza_real.py) |
-| Curioso | [docs/SIMULADOR.md](docs/SIMULADOR.md): el ensayo en simulación y qué cambió en la rampa |
-
-Vídeos: [concepto](docs/videos/esperanza_concepto.mp4) · [simulación](docs/videos/esperanza_simulacion.mp4)
-
-## Las dos habilidades (políticas ACT)
-
-| Habilidad | Texto exacto de la tarea (igual al grabar y al desplegar) |
-| --- | --- |
-| entregar | `take the first cup from the loader and place it on the green mark` |
-| recoger | `pick up the empty cup from the green mark and drop it into the used box` |
-
-Datasets y modelos en Hugging Face: `Josebarv01/esperanza_entregar`, `Josebarv01/esperanza_recoger`,
-`Josebarv01/act_esperanza_entregar` y `Josebarv01/act_esperanza_recoger` (se crean durante el evento).
+**[docs/PLAN.md](docs/PLAN.md)**: el plan paso a paso, con todos los comandos (montar la mesa,
+calibrar, grabar, entrenar, probar y la demo).
 
 ## Qué hay en el repositorio
 
-```
-docs/            plan del hackathon, simulador, imágenes y vídeos
-piezas/          make_stl.py (paramétrico) y las STL para imprimir
-orquestador/     la toma completa con el robot real
-herramientas/    comprobar el portátil y entrenar en Windows
-simulador/       el ensayo en MuJoCo (opcional)
-```
+| Carpeta | Qué es |
+| --- | --- |
+| `app/config.json` | Lo único que hay que editar en el puesto: cámara, medidas de la mesa, puerto del robot y políticas |
+| `app/calibrar.py` | Calibración de la mesa: clic en 4 esquinas, INICIO y las zonas |
+| `app/mapa.py` | El mapa virtual en vivo (cámara + mesa vista desde arriba, láser y cubiletes) |
+| `app/orquestador.py` | Láser → zona → `lerobot-rollout` de la política de esa zona → comprueba si llegó |
+| `app/vision.py` | La visión (OpenCV): mesa en centímetros, láser, cubiletes |
+| `tests/test_vision.py` | Prueba sin cámara ni robot: `python tests/test_vision.py` |
+| `herramientas/` | Comprobar el portátil y entrenar en Windows |
+| `piezas/cubilete.stl` | El cubilete impreso (41 mm de diámetro, nervios para la pinza) |
 
-## Instalación (Windows 11 nativo, sin WSL; probada el 19-nov-2026)
+## Instalación
 
-En WSL las cámaras USB no funcionan, por eso usamos Windows directamente. En Ubuntu o macOS basta la
-instalación de la guía oficial (https://hackathonbilbao.eus/guia-so-101).
+**Mac o Ubuntu (el portátil del robot):** la de la guía oficial (https://hackathonbilbao.eus/guia-so-101)
+y además `pip install matplotlib`.
 
-1. Instalar Miniforge (https://github.com/conda-forge/miniforge) y, en PowerShell:
-
-```
-conda init powershell
-```
-
-2. Cerrar y abrir PowerShell:
+**Windows (el portátil que entrena; sin WSL, porque en WSL las cámaras no funcionan):**
 
 ```
 conda create -y -n lerobot python=3.12 ffmpeg -c conda-forge
@@ -63,33 +42,13 @@ conda create -y -n lerobot python=3.12 ffmpeg -c conda-forge
 conda activate lerobot
 ```
 
-3. PyTorch con CUDA **antes** que LeRobot (si no, pip instala torch sin GPU). Torch 2.15 no está
-publicado con CUDA para Windows; 2.14.1 con CUDA 12.6 funciona:
-
 ```
 pip install torch==2.14.1 torchvision --index-url https://download.pytorch.org/whl/cu126
 ```
 
 ```
-pip install "lerobot[core_scripts,training,feetech]==0.7.0" "torch==2.14.1+cu126" "torchvision==0.29.1+cu126" matplotlib pyttsx3 --extra-index-url https://download.pytorch.org/whl/cu126
+pip install "lerobot[core_scripts,training,feetech]==0.7.0" "torch==2.14.1+cu126" "torchvision==0.29.1+cu126" matplotlib --extra-index-url https://download.pytorch.org/whl/cu126
 ```
 
-4. Si C: va justo de espacio, mandar los datos a otro disco (y abrir una PowerShell nueva):
-
-```
-[Environment]::SetEnvironmentVariable("HF_HOME", "E:\HACKATONLeRobot\hf_cache", "User")
-```
-
-5. Iniciar sesión en Hugging Face (token de **escritura**; pegarlo solo en la terminal) y comprobar:
-
-```
-hf auth login
-```
-
-```
-powershell -ExecutionPolicy Bypass -File herramientas\comprobar.ps1
-```
-
-**En Windows, para entrenar** se usa `python herramientas\lerobot_train_windows.py` con los mismos
-argumentos que `lerobot-train`. El normal se cae al guardar el primer checkpoint, porque Windows no
-deja crear el enlace `checkpoints/last` sin el Modo de desarrollador.
+En Windows, para entrenar, `python herramientas\lerobot_train_windows.py` con los mismos argumentos
+que `lerobot-train`. El normal se cae al guardar el primer checkpoint.

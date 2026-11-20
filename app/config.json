@@ -1,0 +1,57 @@
+{
+  "_ayuda": "Lo unico que hay que editar en el puesto. Las medidas van en centimetros.",
+
+  "camara": {
+    "_ayuda": "La camara cenital (la que ve toda la mesa). Indice: el que dio lerobot-find-cameras.",
+    "indice": 1,
+    "ancho": 640,
+    "alto": 480
+  },
+
+  "mesa_cm": {
+    "_ayuda": "Rectangulo marcado con 4 trozos de cinta en las esquinas (medidlo con la regla).",
+    "ancho": 40,
+    "alto": 30
+  },
+
+  "zona_radio_cm": 6,
+
+  "laser": {
+    "_ayuda": "color: rojo o verde. umbral: subir si detecta cosas que no son el laser; bajar si no lo ve.",
+    "color": "rojo",
+    "umbral": 90,
+    "brillo_min": 170,
+    "area_min_px": 2,
+    "area_max_px": 800,
+    "segundos_quieto": 1.0
+  },
+
+  "cubilete": {
+    "_ayuda": "Cubiletes oscuros sobre fondo claro: pixeles con gris por debajo del umbral.",
+    "umbral_gris": 70,
+    "area_min_cm2": 6,
+    "area_max_cm2": 45
+  },
+
+  "robot": {
+    "_ayuda": "Mac: puerto /dev/tty.usbmodem... ; Windows: COM7... (lo da lerobot-find-port).",
+    "tipo": "so101_follower",
+    "puerto": "/dev/tty.usbmodemXXXX",
+    "id": "pti_follower",
+    "camaras": "{ top: {type: opencv, index_or_path: 1, width: 640, height: 480, fps: 30}, wrist: {type: opencv, index_or_path: 0, width: 640, height: 480, fps: 30} }"
+  },
+
+  "politicas": {
+    "_ayuda": "Una politica ACT por zona de destino. El texto de la tarea debe ser IDENTICO al de la grabacion.",
+    "A": {
+      "repo": "Josebarv01/act_pti_llevar_A",
+      "tarea": "pick up the cup from the start mark and place it in zone A",
+      "duracion_s": 20
+    },
+    "B": {
+      "repo": "Josebarv01/act_pti_llevar_B",
+      "tarea": "pick up the cup from the start mark and place it in zone B",
+      "duracion_s": 20
+    }
+  }
+}
