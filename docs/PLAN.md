@@ -13,9 +13,11 @@ Se pasan datos y modelos por Hugging Face.
 
 ![Montaje del puesto](img/montaje_puesto.png)
 
-1. Una **cartulina o tela clara y mate**, de unos 40 × 30 cm, delante del robot, fijada con cinta.
-   Los cubiletes son negros: sobre fondo claro la cámara los ve bien.
-2. **4 marcas en las esquinas** con cinta **azul o negra**. Nada rojo ni naranja: se confunde con el láser.
+1. Una zona **clara y mate** de unos 40 × 30 cm delante del robot: la propia mesa si es blanca,
+   o una cartulina. Los cubiletes son negros: sobre fondo claro la cámara los ve bien.
+   Quitar de la vista de la cámara todo lo demás (la rampa, cajas, herramientas).
+2. **4 marcas en las esquinas** (rotulador o cinta, **azul o negra**). Nada rojo ni naranja dentro de
+   ese rectángulo: se confunde con el láser (fuera de él da igual, el programa solo busca dentro).
 3. Dibujar 3 círculos de unos 12 cm de diámetro:
    - **INICIO**, unos 20 cm delante del robot;
    - **A** a un lado y **B** al otro, a unos 15 cm de INICIO.

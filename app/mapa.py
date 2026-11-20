@@ -69,7 +69,7 @@ class Vista:
 
 def leer_escena(img, mesa, cfg):
     """(laser_px o None, laser_cm o None, zona_del_laser, cubiletes_cm)."""
-    laser = vision.detectar_laser(img, cfg["laser"])
+    laser = vision.detectar_laser(img, cfg["laser"], mesa.poligono_px)   # solo dentro de la mesa
     cm = mesa.a_cm(laser[:2]) if laser else None
     zona = mesa.zona_de(cm) if cm is not None and mesa.dentro(cm) else None
     cubiletes = vision.detectar_cubiletes(mesa.mapa(img), cfg["cubilete"])

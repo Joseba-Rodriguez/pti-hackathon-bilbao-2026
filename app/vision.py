@@ -74,6 +74,7 @@ class Mesa:
         self.Hinv = np.linalg.inv(self.H)
         self.zonas = {k: np.float32(v) for k, v in calib["zonas_cm"].items()}  # incluye "INICIO"
         self.radio = cfg["zona_radio_cm"]
+        self.poligono_px = np.float32(calib["esquinas_px"])      # la mesa en la imagen
 
     def a_cm(self, px) -> np.ndarray:
         p = cv2.perspectiveTransform(np.float32([[px]]), self.H)[0, 0]
@@ -102,12 +103,14 @@ class Mesa:
 
 
 # -------------------------------------------------------------------- laser
-def detectar_laser(img: np.ndarray, cfg_laser: dict):
+def detectar_laser(img: np.ndarray, cfg_laser: dict, area_px=None):
     """Punto del laser en la imagen: (x_px, y_px, intensidad) o None.
 
     El centro del punto suele salir blanco (saturado) y alrededor un halo del color del
     laser; se busca ese halo (canal del color muy por encima de los otros dos y brillante)
     y se toma el centro de la mancha mas intensa de tamano razonable.
+    ``area_px``: poligono (pixeles) donde buscar, p. ej. la mesa calibrada. Fuera de el se
+    ignora todo (la base naranja del robot, un cuter...).
     """
     b, g, r = (img[..., i].astype(np.int16) for i in range(3))
     if cfg_laser["color"] == "verde":
@@ -115,6 +118,10 @@ def detectar_laser(img: np.ndarray, cfg_laser: dict):
     else:
         canal, score = r, r - np.maximum(g, b)
     mask = ((score > cfg_laser["umbral"]) & (canal > cfg_laser["brillo_min"])).astype(np.uint8)
+    if area_px is not None:
+        dentro = np.zeros(mask.shape, np.uint8)
+        cv2.fillPoly(dentro, [np.int32(area_px)], 1)
+        mask &= dentro
     mask = cv2.dilate(mask, np.ones((3, 3), np.uint8))       # une el halo alrededor del centro blanco
     n, lab, stats, cent = cv2.connectedComponentsWithStats(mask)
     best = None

@@ -3,7 +3,7 @@
 
   "camara": {
     "_ayuda": "La camara cenital (la que ve toda la mesa). Indice: el que dio lerobot-find-cameras.",
-    "indice": 1,
+    "indice": 2,
     "ancho": 640,
     "alto": 480
   },
@@ -34,11 +34,11 @@
   },
 
   "robot": {
-    "_ayuda": "Mac: puerto /dev/tty.usbmodem... ; Windows: COM7... (lo da lerobot-find-port).",
+    "_ayuda": "Mac: puerto /dev/tty.usbmodem... ; Windows: COM7... (lo da lerobot-find-port). Si hay camara de muneca, anadir wrist a camaras.",
     "tipo": "so101_follower",
     "puerto": "/dev/tty.usbmodemXXXX",
     "id": "pti_follower",
-    "camaras": "{ top: {type: opencv, index_or_path: 1, width: 640, height: 480, fps: 30}, wrist: {type: opencv, index_or_path: 0, width: 640, height: 480, fps: 30} }"
+    "camaras": "{ top: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30} }"
   },
 
   "politicas": {
