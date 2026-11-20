@@ -57,6 +57,13 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
   mancha rojiza grande (> 250 px, el brazo), se descarta. Probado: 0 falsos en esos 935 fotogramas
   y un láser pegado en la mesa se detecta 19 de 19. Se graba en `pti_coger_v6`.
 
+### Dataset bueno del modelo 1: `pti_coger_v7` (~23:15)
+- `pti_coger_v6` quedó vacío; se grabó en **`Josebarv01/pti_coger_v7`**: **50 episodios**,
+  43 886 fotogramas (19–36 s por episodio), cámaras top (2) + wrist (1), mesa blanca, 446 MB.
+- Copias (los vídeos pesan > 100 MB, no caben en GitHub):
+  - Hugging Face Hub: https://huggingface.co/datasets/Josebarv01/pti_coger_v7 (público, tamaños verificados).
+  - Local: `E:\HACKATONLeRobot\_copias\pti_coger_v7_50ep`.
+
 ## Tabla de resultados
 
 | Modelo | Checkpoint | Suavizado | Aciertos | Notas |
