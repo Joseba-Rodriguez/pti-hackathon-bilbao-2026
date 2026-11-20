@@ -1,24 +1,21 @@
 {
   "_ayuda": "Lo unico que hay que editar en el puesto. Las medidas van en centimetros.",
-
   "camara": {
     "_ayuda": "La camara cenital (la que ve toda la mesa). Indice: el que dio lerobot-find-cameras.",
     "indice": 2,
     "ancho": 640,
-    "alto": 480
+    "alto": 480,
+    "exposicion": -6,
+    "saturacion": 80
   },
-
   "mesa_cm": {
     "_ayuda": "La cartulina (sus 4 esquinas). Medida con la camara usando un iPhone como referencia (+-3 cm); con regla es exacto.",
     "ancho": 48,
     "alto": 43
   },
-
   "zona_radio_cm": 6,
-
   "_ayuda_inicio": "false si el origen de los cubiletes esta fuera de la cartulina (la camara no lo distingue sobre la mesa blanca).",
   "comprobar_inicio": false,
-
   "laser": {
     "_ayuda": "color: rojo o verde. umbral: subir si detecta cosas que no son el laser; bajar si no lo ve.",
     "color": "rojo",
@@ -28,7 +25,6 @@
     "area_max_px": 800,
     "segundos_quieto": 1.0
   },
-
   "cubilete": {
     "_ayuda": "tapa clara: tapa blanca sobre cartulina oscura (umbral ~150). tapa oscura: cubilete negro sobre fondo claro (umbral ~70).",
     "tapa": "clara",
@@ -38,7 +34,6 @@
     "margen_zona": 1.6,
     "margen_borde_cm": 2
   },
-
   "robot": {
     "_ayuda": "Mac: puerto /dev/tty.usbmodem... ; Windows: COM7... (lo da lerobot-find-port). Si hay camara de muneca, anadir wrist a camaras.",
     "tipo": "so101_follower",
@@ -46,7 +41,6 @@
     "id": "pti_follower",
     "camaras": "{ top: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30} }"
   },
-
   "politicas": {
     "_ayuda": "Una politica ACT por zona de destino. El texto de la tarea debe ser IDENTICO al de la grabacion.",
     "A": {
@@ -59,5 +53,12 @@
       "tarea": "pick up the cup from the start mark and place it in zone B",
       "duracion_s": 20
     }
+  },
+  "marca_laser": {
+    "_ayuda": "Filtro de herramientas/lerobot_laser.py: dibuja un circulo rojo donde esta el laser. Igual al grabar y al desplegar.",
+    "umbral": 100,
+    "brillo_min": 150,
+    "area_max_px": 60,
+    "radio_px": 12
   }
 }
