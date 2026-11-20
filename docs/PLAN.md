@@ -11,6 +11,8 @@ Se pasan datos y modelos por Hugging Face.
 
 ## 1. Montar la mesa (15 min)
 
+![Montaje del puesto](img/montaje_puesto.png)
+
 1. Una **cartulina o tela clara y mate**, de unos 40 × 30 cm, delante del robot, fijada con cinta.
    Los cubiletes son negros: sobre fondo claro la cámara los ve bien.
 2. **4 marcas en las esquinas** con cinta **azul o negra**. Nada rojo ni naranja: se confunde con el láser.
