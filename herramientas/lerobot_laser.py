@@ -29,16 +29,29 @@ AQUI = Path(__file__).resolve().parent
 CONFIG = AQUI.parent / "app" / "config.json"
 CFG = json.loads(CONFIG.read_text(encoding="utf-8"))
 MARCA = CFG.get("marca_laser", {})
-UMBRAL = MARCA.get("umbral", 100)            # rojo - max(verde, azul)
-BRILLO_MIN = MARCA.get("brillo_min", 150)    # canal rojo
+UMBRAL = MARCA.get("umbral", 80)             # cuanto destaca el rojo del punto sobre su entorno
+BRILLO_MIN = MARCA.get("brillo_min", 190)    # canal rojo (laser ~230; base naranja <= ~160)
+# zona donde buscar (pixeles): la cartulina calibrada si existe app/calibracion.json
+try:
+    POLIGONO = np.int32(json.loads((AQUI.parent / "app" / "calibracion.json").read_text())["esquinas_px"])
+except Exception:
+    POLIGONO = None
 AREA_MAX = MARCA.get("area_max_px", 60)      # manchas mayores (base naranja...) no son el laser
 RADIO = MARCA.get("radio_px", 12)            # tamano del circulo dibujado
 
 
 def buscar_laser(bgr: np.ndarray):
+    """El laser es un PICO diminuto y muy brillante; las piezas naranjas del robot son manchas
+    grandes de rojo mas apagado. Top-hat: rojo del pixel menos el rojo "de fondo" de su entorno
+    (apertura 11x11), asi una zona roja grande da ~0 y solo sobreviven los puntos pequenos."""
     b, g, r = (bgr[..., i].astype(np.int16) for i in range(3))
-    score = r - np.maximum(g, b)
-    mask = ((score > UMBRAL) & (r > BRILLO_MIN)).astype(np.uint8)
+    score = np.clip(r - np.maximum(g, b), 0, 255).astype(np.uint8)
+    pico = cv2.morphologyEx(score, cv2.MORPH_TOPHAT, np.ones((11, 11), np.uint8)).astype(np.int16)
+    mask = ((pico > UMBRAL) & (r > BRILLO_MIN)).astype(np.uint8)
+    if POLIGONO is not None:                                  # solo dentro de la cartulina
+        dentro = np.zeros(mask.shape, np.uint8)
+        cv2.fillPoly(dentro, [POLIGONO], 1)
+        mask &= dentro
     if not mask.any():
         return None
     mask = cv2.dilate(mask, np.ones((3, 3), np.uint8))

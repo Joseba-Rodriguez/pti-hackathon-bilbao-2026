@@ -56,8 +56,8 @@
   },
   "marca_laser": {
     "_ayuda": "Filtro de herramientas/lerobot_laser.py: dibuja un circulo rojo donde esta el laser. Igual al grabar y al desplegar.",
-    "umbral": 100,
-    "brillo_min": 150,
+    "umbral": 80,
+    "brillo_min": 190,
     "area_max_px": 60,
     "radio_px": 12
   }
