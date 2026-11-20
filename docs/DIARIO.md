@@ -43,6 +43,17 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 - Plan: 35 episodios más en `pti_coger_v2` (`--resume=true`) hasta 50, cortos (~10 s) y decididos.
 - Probar modelos viendo la cámara en directo: `herramientas\probar.ps1` (Rerun, `--display_data=true`).
 
+### Cámara de muñeca, falsos láser y mesa sin cartulina (~22:00)
+- Cámaras: 0 = webcam del portátil, **1 = muñeca**, 2 = cenital. Se graba con top (2) + wrist (1).
+  Con otra cámara el dataset cambia: no se puede añadir a `pti_coger_v2`.
+- `--display_data=true`: Rerun con las dos cámaras, articulaciones y un **mapa** de la mesa
+  (si existe `app/calibracion.json`; el mapa no se graba).
+- `pti_coger_v3` (4 episodios) descartado: el filtro ponía un círculo falso sobre la **base
+  naranja** del robot en la mitad de los fotogramas. Arreglo: detectar solo picos pequeños
+  (top-hat) con rojo > 190. `pti_coger_v4` quedó vacío.
+- Error al grabar: "Input voltage error" en el servo 6 del **leader** → revisar su fuente de 5 V.
+- Se quita la cartulina: fondo = mesa blanca. Se graba todo de nuevo en `pti_coger_v5`.
+
 ## Tabla de resultados
 
 | Modelo | Checkpoint | Suavizado | Aciertos | Notas |
