@@ -63,15 +63,59 @@ def marcar(bgr: np.ndarray) -> np.ndarray:
     return out
 
 
+class MapaEnVivo:
+    """Si existe app/calibracion.json, envia a Rerun la mesa vista desde arriba (cm) con las
+    zonas y el laser, unas 5 veces por segundo. Solo se ve en pantalla: NO se graba en el dataset."""
+
+    def __init__(self):
+        self.mesa, self.t = None, 0.0
+        try:
+            sys.path.insert(0, str(AQUI.parent / "app"))
+            import vision
+            self.vision = vision
+            self.mesa = vision.Mesa(CFG, vision.cargar_calibracion())
+            print("[mapa] calibracion encontrada: el mapa se vera en Rerun (entidad 'mapa')")
+        except BaseException as e:                       # cargar_calibracion lanza SystemExit
+            print(f"[mapa] sin mapa (falta calibrar con  python ..\\app\\calibrar.py): {e}")
+
+    def enviar(self, bgr: np.ndarray, laser):
+        import time
+        if self.mesa is None or time.time() - self.t < 0.2:
+            return
+        self.t = time.time()
+        try:
+            import rerun as rr
+            m, P = self.mesa, self.vision.PX_POR_CM
+            mapa = m.mapa(bgr)
+            for z, c in m.zonas.items():
+                if m.dentro(c):
+                    cv2.circle(mapa, (int(c[0] * P), int(c[1] * P)), int(m.radio * P), (255, 200, 0), 2)
+                    cv2.putText(mapa, z, (int(c[0] * P) - 10, int(c[1] * P) + 8),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 200, 0), 2)
+            if laser is not None:
+                cm = m.a_cm(laser[:2])
+                if m.dentro(cm):
+                    cv2.drawMarker(mapa, (int(cm[0] * P), int(cm[1] * P)), (0, 0, 255),
+                                   cv2.MARKER_STAR, 40, 3)
+                    cv2.putText(mapa, f"laser ({cm[0]:.0f}, {cm[1]:.0f}) cm", (10, 30),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+            rr.log("mapa", rr.Image(cv2.cvtColor(mapa, cv2.COLOR_BGR2RGB)))
+        except Exception:
+            pass                                          # el mapa nunca debe parar la grabacion
+
+
 def instalar_filtro():
     from lerobot.cameras.opencv import camera_opencv as co
 
     original = co.OpenCVCamera._postprocess_image
     indice = CFG["camara"]["indice"]
+    mapa = MapaEnVivo()
 
     def _postprocess_image(self, image):
         if str(self.index_or_path) == str(indice):            # solo la camara cenital
-            image = marcar(image)                             # image llega en BGR (OpenCV)
+            laser = buscar_laser(image)                       # image llega en BGR (OpenCV)
+            mapa.enviar(image, laser)
+            image = marcar(image)
         return original(self, image)
 
     co.OpenCVCamera._postprocess_image = _postprocess_image

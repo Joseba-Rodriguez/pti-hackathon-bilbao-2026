@@ -13,3 +13,4 @@ __pycache__/
 .env
 # notas privadas
 CLAUDE.md
+_copias/
