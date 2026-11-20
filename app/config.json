@@ -9,9 +9,9 @@
   },
 
   "mesa_cm": {
-    "_ayuda": "Rectangulo marcado con 4 trozos de cinta en las esquinas (medidlo con la regla).",
-    "ancho": 40,
-    "alto": 30
+    "_ayuda": "La cartulina (sus 4 esquinas). Medida con la camara usando un iPhone como referencia (+-3 cm); con regla es exacto.",
+    "ancho": 48,
+    "alto": 43
   },
 
   "zona_radio_cm": 6,
