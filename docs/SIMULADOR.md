@@ -53,6 +53,21 @@ a **6° o menos**. Con PLA sobre PLA no ocurrirá: poner cinta de PTFE en el sue
 imprimirla en PETG y lijarla. Si no se consigue, el plan B es el bolsillo con reposición a mano
 (ver [HACKATON.md](HACKATON.md)).
 
+## Resultados del ensayo (20-nov-2026)
+
+50 demostraciones buenas por habilidad (operador automático), ACT 30 000 pasos, 10 intentos por
+habilidad en escenas nuevas:
+
+| Habilidad | Aciertos | Fallos |
+| --- | --- | --- |
+| entregar | 7/10 | lo tumba al dejarlo (2), fuera de la marca (1) |
+| recoger | 7/10 | lo suelta fuera de la caja (3) |
+
+Con el proyecto anterior (pizza) y 23 demostraciones por habilidad, 3/20. **La cantidad y la
+consistencia de las demostraciones es lo que más cuenta.** Lecciones para el robot real:
+caja de usados más grande (~15 × 15 cm), bajar el vasito hasta casi tocar la mesa antes de soltarlo,
+y grabar más demostraciones justo de la fase donde falla.
+
 ## Comandos (PowerShell, uno a uno)
 
 Todos desde la carpeta del repo:
