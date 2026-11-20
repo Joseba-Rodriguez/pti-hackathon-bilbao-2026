@@ -27,8 +27,9 @@
   },
 
   "cubilete": {
-    "_ayuda": "Cubiletes oscuros sobre fondo claro: pixeles con gris por debajo del umbral.",
-    "umbral_gris": 70,
+    "_ayuda": "tapa clara: tapa blanca sobre cartulina oscura (umbral ~150). tapa oscura: cubilete negro sobre fondo claro (umbral ~70).",
+    "tapa": "clara",
+    "umbral_gris": 150,
     "area_min_cm2": 6,
     "area_max_cm2": 45
   },

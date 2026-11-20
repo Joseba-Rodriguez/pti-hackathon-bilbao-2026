@@ -16,6 +16,8 @@ sys.path.insert(0, str(AQUI.parent / "app"))
 import vision  # noqa: E402
 
 CFG = vision.cargar_config()
+# las fotos sinteticas son de cubiletes NEGROS sobre carton claro
+CFG["cubilete"] = dict(CFG["cubilete"], tapa="oscura", umbral_gris=70)
 ANCHO, ALTO = CFG["mesa_cm"]["ancho"], CFG["mesa_cm"]["alto"]
 # la camara ve la mesa en perspectiva (trapecio), como en el puesto
 ESQ = [(150, 90), (500, 100), (600, 420), (40, 400)]

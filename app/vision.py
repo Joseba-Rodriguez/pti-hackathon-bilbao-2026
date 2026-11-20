@@ -137,9 +137,16 @@ def detectar_laser(img: np.ndarray, cfg_laser: dict, area_px=None):
 
 # ---------------------------------------------------------------- cubiletes
 def detectar_cubiletes(mapa_img: np.ndarray, cfg_cub: dict) -> list[tuple[float, float]]:
-    """Centros (cm) de los cubiletes oscuros en el mapa rectificado."""
+    """Centros (cm) de los cubiletes en el mapa rectificado.
+
+    ``tapa: "clara"``: cubilete con tapa blanca sobre fondo oscuro (pixeles MAS claros que el umbral).
+    ``tapa: "oscura"``: cubilete negro sobre fondo claro (pixeles MAS oscuros que el umbral).
+    """
     gris = cv2.cvtColor(mapa_img, cv2.COLOR_BGR2GRAY)
-    mask = (gris < cfg_cub["umbral_gris"]).astype(np.uint8)
+    if cfg_cub.get("tapa", "oscura") == "clara":
+        mask = (gris > cfg_cub["umbral_gris"]).astype(np.uint8)
+    else:
+        mask = (gris < cfg_cub["umbral_gris"]).astype(np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
     n, _, stats, cent = cv2.connectedComponentsWithStats(mask)
     a_min, a_max = cfg_cub["area_min_cm2"] * PX_POR_CM ** 2, cfg_cub["area_max_cm2"] * PX_POR_CM ** 2
