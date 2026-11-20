@@ -147,6 +147,10 @@ def detectar_cubiletes(mapa_img: np.ndarray, cfg_cub: dict) -> list[tuple[float,
         mask = (gris > cfg_cub["umbral_gris"]).astype(np.uint8)
     else:
         mask = (gris < cfg_cub["umbral_gris"]).astype(np.uint8)
+    # ignorar el borde de la cartulina: ahi asoma la mesa (blanca) y no habra cubiletes
+    b = int(cfg_cub.get("margen_borde_cm", 2) * PX_POR_CM)
+    if b > 0:
+        mask[:b, :] = 0; mask[-b:, :] = 0; mask[:, :b] = 0; mask[:, -b:] = 0
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
     n, _, stats, cent = cv2.connectedComponentsWithStats(mask)
     a_min, a_max = cfg_cub["area_min_cm2"] * PX_POR_CM ** 2, cfg_cub["area_max_cm2"] * PX_POR_CM ** 2

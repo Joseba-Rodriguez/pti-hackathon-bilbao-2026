@@ -16,6 +16,9 @@
 
   "zona_radio_cm": 6,
 
+  "_ayuda_inicio": "false si el origen de los cubiletes esta fuera de la cartulina (la camara no lo distingue sobre la mesa blanca).",
+  "comprobar_inicio": false,
+
   "laser": {
     "_ayuda": "color: rojo o verde. umbral: subir si detecta cosas que no son el laser; bajar si no lo ve.",
     "color": "rojo",

@@ -58,7 +58,12 @@ class Vista:
             ax_c.plot(laser[0], laser[1], "o", ms=16, mfc="none", mec="red", mew=2)
             if m.dentro(cm):
                 ax_m.plot(cm[0], cm[1], "*", ms=22, color="red", mec="white")
-        ax_m.set_xlim(0, m.ancho); ax_m.set_ylim(m.alto, 0)
+        # el mapa abarca la cartulina y tambien las zonas que esten fuera (p. ej. INICIO en el soporte)
+        zs = np.array(list(m.zonas.values())) if m.zonas else np.zeros((0, 2))
+        x0 = min([0] + list(zs[:, 0] - m.radio - 1)); x1 = max([m.ancho] + list(zs[:, 0] + m.radio + 1))
+        y0 = min([0] + list(zs[:, 1] - m.radio - 2)); y1 = max([m.alto] + list(zs[:, 1] + m.radio + 1))
+        ax_m.add_patch(self.plt.Rectangle((0, 0), m.ancho, m.alto, fill=False, ec="#5f6368", lw=1))
+        ax_m.set_xlim(x0, x1); ax_m.set_ylim(y1, y0)
         ax_m.set_aspect("equal")
         ax_m.set_title(f"Mapa virtual ({m.ancho} × {m.alto} cm)")
         ax_m.set_xlabel("cm"); ax_c.axis("off")

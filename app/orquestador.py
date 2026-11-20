@@ -62,10 +62,14 @@ def main():
         while not vista.salir:
             img = cam.foto()
             laser, cm, zona, cubs = leer_escena(img, mesa, cfg)
-            en_inicio = any(mesa.zona_de(c, incluir_inicio=True) == "INICIO" for c in cubs)
+            # si INICIO esta fuera de la cartulina (tapa blanca sobre mesa blanca) la camara no puede
+            # verlo: se confia en que el cubilete este alli
+            comprobar = cfg.get("comprobar_inicio", True)
+            en_inicio = (not comprobar) or any(mesa.zona_de(c, incluir_inicio=True) == "INICIO" for c in cubs)
             destino = seguidor.actualizar(zona if zona in zonas_robot else None)
             estado = (f"Láser → zona {zona}" if zona else ("Láser fuera de zona" if laser else "Esperando el láser…"))
-            estado += "   ·   cubilete en INICIO" if en_inicio else "   ·   NO hay cubilete en INICIO"
+            if comprobar:
+                estado += "   ·   cubilete en INICIO" if en_inicio else "   ·   NO hay cubilete en INICIO"
             vista.dibujar(img, laser, cubs, estado, destino=zona)
             if not destino:
                 if a.imagen:
