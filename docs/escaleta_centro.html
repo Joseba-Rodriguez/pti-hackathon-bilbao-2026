@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escaleta Centro PTI</title>
+<style>
+:root{--bg:#0b0d0e;--panel:#121617;--line:#263133;--text:#dfe7e5;--dim:#7b8a87;--amber:#ffb000;--red:#ff3b30;--green:#36e27a;--cyan:#4fd6ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:ui-monospace,Consolas,monospace;padding:16px}
+h1{margin:0 0 4px;color:var(--amber);letter-spacing:.12em;font-size:20px}
+.sub{color:var(--dim);font-size:12px;margin-bottom:12px}
+.ley{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin-bottom:14px}
+.ley b{color:var(--text);font-weight:normal}
+.prog{font-size:14px;margin-bottom:14px} .prog b{color:var(--green)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.ep{background:var(--panel);border:1px solid var(--line);padding:10px;cursor:pointer;user-select:none;transition:.15s}
+.ep:hover{border-color:var(--amber)}
+.ep.hecho{opacity:.38;border-color:var(--green)}
+.ep .cab{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:6px}
+.ep .n{color:var(--amber);font-size:18px}
+.ep .chk{width:20px;height:20px;border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;color:var(--green)}
+.ep.hecho .chk::after{content:"✔"}
+.ep .txt{font-size:12px;color:#b7c4c1;min-height:32px;line-height:1.35;margin-top:6px}
+.ep .fin{color:var(--red)}
+svg{width:100%;display:block}
+.tot{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tot div{border:1px solid var(--line);padding:6px 10px;font-size:12px}
+.tot b{color:var(--amber)}
+@media print{body{background:#fff;color:#000}.ep{break-inside:avoid}}
+</style>
+</head>
+<body>
+<h1>ESCALETA · 30 EPISODIOS AL CENTRO (TIPO H)</h1>
+<div class="sub">Clic en una tarjeta para marcarla como grabada (se guarda en este navegador). Comando:
+  <b>grabar_laser.ps1 -Tipo H</b> · dataset <b>pti_laser_H_centro</b></div>
+<div class="ley">
+  <span>▲ <b>ROBOT</b> arriba</span>
+  <span><b style="color:#555">gris</b> = fila 1-2-3, no usar</span>
+  <span><b style="color:var(--cyan)">●</b> se enciende el láser</span>
+  <span><b style="color:var(--amber)">—</b> recorrido</span>
+  <span><b style="color:var(--amber)">‖</b> pausa 2 s</span>
+  <span><b style="color:var(--red)">✕</b> se APAGA = se suelta el bote</span>
+</div>
+<div class="tot" id="tot"></div>
+<div class="prog" id="prog"></div>
+<div class="grid" id="grid"></div>
+
+<script>
+// casillas: 1 2 3 (cerca, no usar) / 4 5 6 (medio) / 7 8 9 (lejos). Coordenadas de cada centro.
+const C = {1:[0,0],2:[1,0],3:[2,0],4:[0,1],5:[1,1],6:[2,1],7:[0,2],8:[1,2],9:[2,2]};
+// [recorrido por casillas, pausa en el paso i (o null), texto]
+const EP = [
+  [[4,5],null,"Recto → hasta el centro"],
+  [[6,5],null,"Recto ← hasta el centro"],
+  [[8,5],null,"Recto ↑ desde abajo"],
+  [[7,5],null,"Diagonal ↗"],
+  [[9,5],null,"Diagonal ↖"],
+  [[5],0,"Se enciende ya en el centro, quieto 3 s"],
+  [[4,5,6],null,"Cruza el centro sin parar"],
+  [[6,5,4],1,"Cruza el centro, para 2 s, sigue"],
+  [[4,8,5],null,"Curva por abajo (8) al centro"],
+  [[6,8,5],null,"Curva por abajo (8) al centro"],
+  [[5,4,5],null,"Sale al 4 y vuelve al centro"],
+  [[5,6,5],null,"Sale al 6 y vuelve al centro"],
+  [[5,8,5],null,"Sale al 8 y vuelve al centro"],
+  [[7,8],null,"Recto → por la fila de abajo"],
+  [[9,8],null,"Recto ← por la fila de abajo"],
+  [[5,8],null,"Recto ↓ desde el centro"],
+  [[4,8],null,"Diagonal ↘"],
+  [[4,5,6],null,"Recto → cruzando el centro"],
+  [[8,6],null,"Diagonal ↗"],
+  [[5,6],null,"Recto → desde el centro"],
+  [[9,6],null,"Recto ↑"],
+  [[4,5,6],null,"Zigzag 4 → 5 → 6"],
+  [[5,7],null,"Diagonal ↙"],
+  [[4,7],null,"Recto ↓"],
+  [[8,7],null,"Recto ←"],
+  [[5,9],null,"Diagonal ↘"],
+  [[6,9],null,"Recto ↓"],
+  [[8,9],null,"Recto →"],
+  [[6,5,4],null,"Recto ← cruzando el centro"],
+  [[8,4],null,"Diagonal ↖"],
+];
+const S = 60, M = 10, W = S * 3 + M * 2, H = S * 3 + M * 2 + 14;
+const pt = c => [M + C[c][0] * S + S / 2, 14 + M + C[c][1] * S + S / 2];
+function tablero(ruta, pausa, i) {
+  let s = `<svg viewBox="0 0 ${W} ${H}"><text x="${W / 2}" y="10" fill="#7b8a87" font-size="9" text-anchor="middle">▲ ROBOT</text>`;
+  for (let c = 1; c <= 9; c++) {
+    const [x, y] = [M + C[c][0] * S, 14 + M + C[c][1] * S], fin = c === ruta[ruta.length - 1];
+    s += `<rect x="${x}" y="${y}" width="${S}" height="${S}" fill="${c <= 3 ? "#1a1d1e" : (fin ? "#3a1210" : "#0e1213")}" stroke="#263133"/>
+          <text x="${x + 5}" y="${y + 12}" fill="${c <= 3 ? "#444" : "#7b8a87"}" font-size="10">${c}</text>`;
+  }
+  // zigzag / curvas: desplazar un poco los puntos intermedios para que se vea el gesto
+  const pts = ruta.map((c, k) => { const p = pt(c); return (k > 0 && k < ruta.length - 1 && ruta[k - 1] === ruta[k + 1]) ? [p[0] + 6, p[1] + 6] : p; });
+  if (ruta.length > 1 && ruta[0] === ruta[ruta.length - 1]) pts[0] = [pts[0][0] - 14, pts[0][1] - 16];   // ida y vuelta: que se vea el inicio
+  if (pts.length > 1) {
+    let d = `M${pts[0][0]},${pts[0][1]}`;
+    for (let k = 1; k < pts.length; k++) {
+      const [a, b] = [pts[k - 1], pts[k]];
+      d += ruta.length === 3 && ruta[1] === 8 && k === 1 ? ` Q${b[0]},${b[1] + 18} ${b[0]},${b[1]}` : ` L${b[0]},${b[1]}`;
+    }
+    s += `<path d="${d}" fill="none" stroke="#ffb000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fl${i})"/>
+          <defs><marker id="fl${i}" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#ffb000"/></marker></defs>`;
+  }
+  if (pausa !== null) { const [x, y] = pts[pausa]; s += `<text x="${x + 8}" y="${y - 6}" fill="#ffb000" font-size="14" font-weight="bold">‖</text>`; }
+  const [x0, y0] = pts[0], [x1, y1] = pts[pts.length - 1];
+  s += `<circle cx="${x0}" cy="${y0}" r="6" fill="#4fd6ff"/>`;
+  s += `<path d="M${x1 - 8},${y1 - 8} L${x1 + 8},${y1 + 8} M${x1 + 8},${y1 - 8} L${x1 - 8},${y1 + 8}" stroke="#ff3b30" stroke-width="4"/>`;
+  return s + "</svg>";
+}
+let hechos = new Set();
+try { hechos = new Set(JSON.parse(localStorage.getItem("escaletaH") || "[]")); } catch (e) {}
+function guardar() { try { localStorage.setItem("escaletaH", JSON.stringify([...hechos])); } catch (e) {} }
+function pintar() {
+  $grid = document.getElementById("grid");
+  $grid.innerHTML = EP.map(([r, p, t], i) => `<div class="ep ${hechos.has(i) ? "hecho" : ""}" data-i="${i}">
+      <div class="cab"><span class="n">#${i + 1}</span><span>se apaga en <span class="fin">${r[r.length - 1]}</span></span><span class="chk"></span></div>
+      ${tablero(r, p, i)}<div class="txt">${t}</div></div>`).join("");
+  document.querySelectorAll(".ep").forEach(el => el.onclick = () => {
+    const i = +el.dataset.i; hechos.has(i) ? hechos.delete(i) : hechos.add(i); guardar(); pintar();
+  });
+  document.getElementById("prog").innerHTML = `Grabados: <b>${hechos.size}</b> de ${EP.length}`;
+  const cuenta = {}; EP.forEach(([r]) => { const f = r[r.length - 1]; cuenta[f] = (cuenta[f] || 0) + 1; });
+  document.getElementById("tot").innerHTML = Object.keys(cuenta).sort().map(k => `<div>casilla <b>${k}</b>: ${cuenta[k]} finales</div>`).join("");
+}
+pintar();
+</script>
+</body>
+</html>

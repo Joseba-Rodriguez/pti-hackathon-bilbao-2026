@@ -16,7 +16,9 @@ Sueltas que hay ahora (ayer + hoy) y objetivo después de grabar:
 | Casilla | 4 | **5** | 6 | 7 | **8** | 9 |
 | --- | --- | --- | --- | --- | --- | --- |
 | Ahora | 22 | 18 | 11 | 2 | 2 | 1 |
-| Se añaden | 2 | **12** | 6 | 3 | **4** | 3 |
+| Se añaden | 3 | **11** | 6 | 3 | **4** | 3 |
+
+Versión visual con un tablero dibujado por episodio y casillas para marcar: `docs/escaleta_centro.html`.
 
 ## Reglas (las de siempre)
 - Fondo negro, bote y soporte **igual que en las grabaciones** (no tapar ni destapar nada nuevo).
