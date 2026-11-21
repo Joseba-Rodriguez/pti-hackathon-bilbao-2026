@@ -127,3 +127,7 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 
 - **`todo_v2` terminado** (~16:42): 10 000 pasos desde `todo_v1` con 123 episodios, loss ~0,16. `Josebarv01/act_pti_todo_v2` → `lerobot\outputs\nube\todo_v2`; carga en el portátil.
 
+- Prueba `todo_v2` (manual, `-Coef -0.05` / `0` / `0.01`): funciona pero **tiembla y va más lento que `todo_v1`**. Descartado: demos más lentas (H 107 °/s ≈ láser 105 °/s) y cambio de normalización (< 3 %). Hipótesis: poco entrenamiento (10k pasos < 1 época) y pausas aprendidas del H.
+- Fallos `There is no status packet` al conectar (servos 6 y 4): servos sanos (0/600 fallos leyendo). `lerobot_laser.py` reintenta 3 veces las escrituras de configuración.
+- **`todo_v3`** en la nube: desde `todo_v1`, `pti_todo_v2` (123 ep.), **25 000 pasos** (~2 épocas). Job `6b01c756efaf5e14f4b5b759`. `todo_v1` sigue siendo el de la demo hasta que v3 gane.
+
