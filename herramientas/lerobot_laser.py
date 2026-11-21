@@ -79,8 +79,96 @@ def buscar_laser(bgr: np.ndarray):
     return best
 
 
-def marcar(bgr: np.ndarray) -> np.ndarray:
-    p = buscar_laser(bgr)
+# ----------------------------------------------------------------------------- detector v2
+# v1 (arriba) pide "rojo > 190 y rojo >> verde/azul": va bien sobre fondo oscuro, pero sobre la mesa
+# blanca con luz de dia el fondo ya tiene ~180 en los tres canales y el punto apenas destaca.
+# v2 mide el punto CONTRA SU ENTORNO (cuanto sube el rojo respecto a lo que hay alrededor y cuanto
+# mas sube el rojo que el verde/azul) y ademas lo SIGUE entre fotogramas: si se pierde un instante
+# (desenfoque al moverlo, parpadeo) lo busca cerca de donde estaba con umbral mas bajo y mantiene
+# el circulo unos pocos fotogramas. El circulo dibujado es EXACTAMENTE el mismo que en v1.
+DETECTOR = MARCA.get("detector", "v2")
+V2_SUBIDA_ROJO = MARCA.get("v2_subida_rojo", 45)     # rojo del punto - rojo del entorno
+V2_ROJEZ = MARCA.get("v2_rojez", 30)                 # (subida del rojo) - (subida de verde/azul)
+V2_BUSQUEDA_PX = MARCA.get("v2_busqueda_px", 45)     # radio de busqueda cerca del ultimo punto
+V2_MANTENER = MARCA.get("v2_mantener_fotogramas", 4) # fotogramas que se mantiene si se pierde (~0,13 s)
+V2_MARGEN_BRAZO = MARCA.get("v2_margen_brazo_px", 14) # distancia minima al brazo naranja (brillos del brazo)
+# zona donde se busca (pixeles x0, y0, x1, y1): las 6 casillas lejanas. Fuera quedan la base del
+# robot (arriba), el soporte (arriba-izquierda) y los bordes de la imagen, donde v2 daba falsos.
+V2_ZONA = MARCA.get("v2_zona_px", [110, 195, 590, 470])
+
+
+def _candidatos_v2(bgr: np.ndarray, factor: float = 1.0, centro=None):
+    b, g, r = (bgr[..., i].astype(np.int16) for i in range(3))
+    k = np.ones((15, 15), np.uint8)
+    fondo = cv2.morphologyEx(bgr, cv2.MORPH_OPEN, k).astype(np.int16)   # lo que hay alrededor sin el punto
+    dr = r - fondo[..., 2]
+    dgb = np.maximum(g - fondo[..., 1], b - fondo[..., 0])
+    mask = ((dr > V2_SUBIDA_ROJO * factor) & (dr - dgb > V2_ROJEZ * factor)).astype(np.uint8)
+    x0, y0, x1, y1 = V2_ZONA
+    zona = np.zeros(mask.shape, np.uint8)
+    zona[y0:y1, x0:x1] = 1
+    mask &= zona
+    if POLIGONO is not None:
+        dentro = np.zeros(mask.shape, np.uint8)
+        cv2.fillPoly(dentro, [POLIGONO], 1)
+        mask &= dentro
+    if centro is not None:                                   # solo cerca del ultimo punto
+        cerca = np.zeros(mask.shape, np.uint8)
+        cv2.circle(cerca, centro, V2_BUSQUEDA_PX, 1, -1)
+        mask &= cerca
+    if not mask.any():
+        return None
+    score = np.clip(r - np.maximum(g, b), 0, 255)             # mismo rechazo del brazo que v1
+    rojizo = ((score > ROJIZO) & (r > 60)).astype(np.uint8)
+    rojizo = cv2.dilate(rojizo, np.ones((2 * V2_MARGEN_BRAZO + 1,) * 2, np.uint8))
+    nr, lab_r, st_r, _ = cv2.connectedComponentsWithStats(rojizo)
+    grande = np.zeros(nr, bool)
+    grande[1:] = st_r[1:, cv2.CC_STAT_AREA] > AREA_BRAZO
+    mask[grande[lab_r]] = 0
+    mask = cv2.dilate(mask, np.ones((3, 3), np.uint8))
+    n, lab, stats, cent = cv2.connectedComponentsWithStats(mask)
+    best = None
+    fuerza = dr - dgb
+    for i in range(1, n):
+        if stats[i, cv2.CC_STAT_AREA] > AREA_MAX:
+            continue
+        f = int(fuerza[lab == i].max())
+        if best is None or f > best[2]:
+            best = (int(round(cent[i][0])), int(round(cent[i][1])), f)
+    return best
+
+
+class Seguidor:
+    """Recuerda el ultimo punto para no perderlo en un parpadeo o al moverlo rapido."""
+
+    def __init__(self):
+        self.ultimo, self.perdidos = None, 0
+
+    def __call__(self, bgr: np.ndarray):
+        p = _candidatos_v2(bgr)
+        if p is None and self.ultimo is not None:            # perdido: buscar cerca, mas permisivo
+            p = _candidatos_v2(bgr, factor=0.6, centro=self.ultimo)
+        if p is not None:
+            self.ultimo, self.perdidos = p[:2], 0
+            return p
+        if self.ultimo is not None and self.perdidos < V2_MANTENER:
+            self.perdidos += 1
+            return (*self.ultimo, 0)                           # mantener el circulo un instante
+        self.ultimo = None
+        return None
+
+
+_seguidor = Seguidor()
+
+
+def detectar(bgr: np.ndarray):
+    """Lo que usan grabar/desplegar: v2 con seguimiento, o v1 si config dice detector = v1."""
+    return _seguidor(bgr) if DETECTOR == "v2" else buscar_laser(bgr)
+
+
+def marcar(bgr: np.ndarray, p="buscar") -> np.ndarray:
+    if isinstance(p, str):
+        p = detectar(bgr)
     if p is None:
         return bgr
     out = bgr.copy()
@@ -168,9 +256,9 @@ def instalar_filtro():
 
     def _postprocess_image(self, image):
         if str(self.index_or_path) == str(indice):            # solo la camara cenital
-            laser = buscar_laser(image)                       # image llega en BGR (OpenCV)
+            laser = detectar(image)                           # image llega en BGR (OpenCV)
             mapa.enviar(image, laser)
-            image = marcar(image)
+            image = marcar(image, laser)
             gemelo.camara(image, laser)
         return original(self, image)
 
@@ -192,7 +280,7 @@ def instalar_filtro():
         print("[gemelo] enviando articulaciones y camara a herramientas/gemelo.py (UDP 5055/5056)")
     except Exception as e:
         print(f"[gemelo] no disponible: {e}")
-    print(f"[filtro laser] activo en la camara {indice} (umbral {UMBRAL}, circulo {RADIO} px)")
+    print(f"[filtro laser] activo en la camara {indice} (detector {DETECTOR}, circulo {RADIO} px)")
 
 
 def aplicar_exposicion():

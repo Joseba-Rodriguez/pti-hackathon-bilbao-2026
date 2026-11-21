@@ -37,9 +37,9 @@ def main():
         while True:
             ok, img = top.read()
             if ok:
-                laser = L.buscar_laser(img)
+                laser = L.detectar(img)
                 mapa.enviar(img, laser)
-                marcada = L.marcar(img)
+                marcada = L.marcar(img, laser)
                 gemelo.camara(marcada, laser)
                 rr.log("top", rr.Image(cv2.cvtColor(marcada, cv2.COLOR_BGR2RGB)))
                 rr.log("laser_visto", rr.Scalars(1.0 if laser else 0.0))

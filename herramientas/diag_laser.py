@@ -43,7 +43,7 @@ def main():
         n += 1
         if guardar:
             clip.append(im)
-        p = L.buscar_laser(im)
+        p = L.detectar(im)
         b, g, r = (im[..., i].astype(np.int16) for i in range(3))
         score = np.clip(r - np.maximum(g, b), 0, 255)
         y, x = np.unravel_index(int(np.argmax(score)), score.shape)
@@ -57,6 +57,7 @@ def main():
         np.savez_compressed(ruta, frames=np.stack(clip))   # sin perdidas, sin filtro
         print(f"Clip guardado: {ruta}")
     fps = n / 6
+    print(f"Detector: {L.DETECTOR}")
     print(f"{n} fotogramas ({fps:.0f} fps).  Visto en {linea.count('#')} de {n} ({100 * linea.count('#') / max(n, 1):.0f} %)")
     for i in range(0, len(linea), 60):
         print("  " + linea[i:i + 60])
