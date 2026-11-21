@@ -10,7 +10,8 @@ param(
     [string]$Tarea = "pick up the cup from the holder",
     [int]$Segundos = 30,
     [switch]$SinSuavizar,
-    [int]$Bloque = 0     # >0: sin suavizado, re-planifica cada N pasos (p.ej. 10 = mas reactivo para seguir el laser)
+    [int]$Bloque = 0,    # >0: sin suavizado, re-planifica cada N pasos (p.ej. 10 = mas reactivo para seguir el laser)
+    [string]$Coef = ""   # suavizado con este coeficiente: 0.01 = suave (por defecto); -0.05 = suave pero reacciona antes
 )
 
 Set-Location E:\HACKATONLeRobot\lerobot
@@ -33,6 +34,7 @@ $args = @(
     "--robot.max_relative_target=10",
     "--task=$Tarea", "--duration=$Segundos", "--display_data=true"
 )
-if ($Bloque -gt 0) { $args += @("--policy.n_action_steps=$Bloque") }
+if ($Coef) { $args += @("--policy.n_action_steps=1", "--policy.temporal_ensemble_coeff=$Coef") }
+elseif ($Bloque -gt 0) { $args += @("--policy.n_action_steps=$Bloque") }
 elseif (-not $SinSuavizar) { $args += @("--policy.n_action_steps=1", "--policy.temporal_ensemble_coeff=0.01") }
 & .\.venv\Scripts\python.exe @args

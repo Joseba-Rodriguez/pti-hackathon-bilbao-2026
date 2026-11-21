@@ -111,3 +111,5 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
   Hipótesis: en las grabaciones el círculo se corta 0,5–2 s mientras se sigue (el bote/brazo tapa el punto), así que «sin láser» no significa siempre «soltar».
 - **`todo_v1` terminado** (13:40): 15 000 pasos, 95 episodios. `Josebarv01/act_pti_todo_v1`, en `lerobot\outputs\nube\todo_v1`; carga en el portátil.
 
+- **`todo_v1` SÍ suelta al apagar el láser** y funciona mucho mejor que `laser_v1`, pero con `-Bloque 10` va a trompicones. Se prueba suavizado (`-Coef 0.01` y `-Coef -0.05`).
+
