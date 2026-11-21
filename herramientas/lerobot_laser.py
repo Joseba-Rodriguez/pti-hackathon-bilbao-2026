@@ -308,6 +308,13 @@ def main():
         cv2.imwrite(str(salida), marcar(img))
         print("guardado", salida)
         return
+    # Parada desde la web (gemelo.py manda CTRL_BREAK): convertirla en el mismo Ctrl+C de siempre,
+    # para que lerobot cierre limpio (para el bucle y desconecta el robot) en vez de morir de golpe.
+    import signal
+    if hasattr(signal, "SIGBREAK"):
+        def _parar(*_):
+            raise KeyboardInterrupt
+        signal.signal(signal.SIGBREAK, _parar)
     aplicar_exposicion()
     instalar_filtro()
     sys.argv = [f"lerobot-{modo}"] + resto

@@ -347,7 +347,7 @@ def main():
 
 
 # ----------------------------------------------------------------------------- servidor web (MJPEG)
-PUERTO_WEB = 8765
+PUERTO_WEB = int(__import__("os").environ.get("PTI_PUERTO", "8765"))
 PAGINA = b"""<!doctype html><html><head><meta charset="utf-8"><title>PTI - gemelo digital</title>
 <style>html,body{margin:0;height:100%;background:#0e0e10;display:flex;align-items:center;justify-content:center}
 img{max-width:100vw;max-height:100vh}#b{position:fixed;bottom:6px;right:8px;opacity:.25;font:12px sans-serif}
@@ -361,6 +361,117 @@ if(k){fetch('/tecla?k='+k);e.preventDefault()}}</script></body></html>"""
 
 
 WEB_HTML = AQUI / "gemelo_web.html"   # web "celda caliente" (Pu-239); la vista clasica sigue en /clasico
+LEROBOT = RAIZ / "lerobot"
+TAREA = "pick up the cup, follow the laser and place it where the laser turns off"
+
+
+class Lanzador:
+    """Lanza desde la web los comandos de la demo (uno a la vez) y guarda su salida."""
+
+    def __init__(self):
+        self.proc, self.nombre, self.salida = None, None, deque(maxlen=300)
+
+    def vivo(self):
+        return self.proc is not None and self.proc.poll() is None
+
+    def estado(self):
+        return {"nombre": self.nombre, "vivo": self.vivo(),
+                "codigo": None if self.proc is None else self.proc.poll(), "salida": list(self.salida)[-60:]}
+
+    def lanzar(self, nombre, args):
+        import os, subprocess, threading
+        if self.vivo():
+            return f"Ya hay algo en marcha ({self.nombre}). Páralo primero."
+        env = dict(os.environ, HF_HOME=str(RAIZ / "hf_cache"), PYTHONUNBUFFERED="1",
+                   PATH=r"E:\miniforge3\envs\ffmpeg8\Library\bin;" + os.environ.get("PATH", ""))
+        self.salida.clear()
+        self.salida.append(f"$ {nombre}")
+        self.nombre = nombre
+        self.proc = subprocess.Popen([sys.executable, *args], cwd=LEROBOT, env=env, stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
+                                     creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+
+        def leer(p):
+            for linea in p.stdout:
+                linea = linea.rstrip()
+                if linea:
+                    self.salida.append(linea[-220:])
+            self.salida.append(f"[fin: código {p.wait()}]")
+        threading.Thread(target=leer, args=(self.proc,), daemon=True).start()
+        return "ok"
+
+    def parar(self):
+        import signal, threading
+        if not self.vivo():
+            return "No hay nada en marcha."
+        p = self.proc
+        self.salida.append("[PARANDO: el robot se desconecta y suelta el par; sujeta el brazo si hace falta]")
+        try:
+            p.send_signal(signal.CTRL_BREAK_EVENT)        # = Ctrl+C: cierre limpio de lerobot
+        except Exception:
+            p.terminate()
+
+        def rematar():
+            try:
+                p.wait(timeout=12)
+            except Exception:
+                p.kill()
+                self.salida.append("[forzado: proceso terminado]")
+        threading.Thread(target=rematar, daemon=True).start()
+        return "ok"
+
+
+def modelos_disponibles():
+    out = []
+    for p in sorted((LEROBOT / "outputs" / "nube").glob("*")):
+        if (p / "model.safetensors").exists():
+            out.append(f"outputs/nube/{p.name}")
+    for p in sorted((LEROBOT / "outputs" / "train").glob("*/checkpoints/last/pretrained_model")):
+        out.append(p.relative_to(LEROBOT).as_posix())
+    return out
+
+
+def puerto_follower():
+    import subprocess
+    r = subprocess.run([sys.executable, str(AQUI / "puertos.py")], capture_output=True, text=True, cwd=LEROBOT)
+    for linea in r.stdout.splitlines():
+        if linea.startswith("follower:"):
+            return linea.split()[1]
+    return None
+
+
+def accion(lz: Lanzador, x: str, prm: dict) -> str:
+    if x == "parar":
+        return lz.parar()
+    if x == "camara_aplicar":
+        return lz.lanzar("Ajustar cámara (exposición)", [str(AQUI / "camara_laser.py"), "--aplicar"])
+    if x == "camara_comprobar":
+        return lz.lanzar("Comprobar cámara", [str(AQUI / "comprobar_camara.py")])
+    if x == "puertos":
+        return lz.lanzar("Buscar brazos (puertos)", [str(AQUI / "puertos.py")])
+    if x == "probar":
+        if prm.get("seguro") != "1":
+            return "Falta confirmar que hay una persona con la mano en la alimentación."
+        modelo = prm.get("modelo", "")
+        if modelo not in modelos_disponibles():
+            return f"Modelo desconocido: {modelo}"
+        com = puerto_follower()
+        if not com:
+            return "No encuentro el follower (¿enchufado y con alimentación?)."
+        seg = str(max(5, min(300, int(prm.get("seg", "45") or 45))))
+        args = [str(AQUI / "lerobot_laser.py"), "rollout", "--strategy.type=base", f"--policy.path={modelo}",
+                "--robot.type=so101_follower", f"--robot.port={com}", "--robot.id=follower_puesto",
+                "--robot.cameras={ top: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30}, "
+                "wrist: {type: opencv, index_or_path: 1, width: 640, height: 480, fps: 30} }",
+                "--robot.max_relative_target=10", f"--task={TAREA}", f"--duration={seg}"]
+        coef = prm.get("coef", "-0.05")
+        if coef == "bloque10":
+            args.append("--policy.n_action_steps=10")
+        else:
+            float(coef)
+            args += ["--policy.n_action_steps=1", f"--policy.temporal_ensemble_coeff={coef}"]
+        return lz.lanzar(f"ROBOT: {modelo} ({coef}, {seg} s, {com})", args)
+    return f"Acción desconocida: {x}"
 
 
 class Web:
@@ -369,6 +480,7 @@ class Web:
         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
         self.jpgs, self.teclas, self.cond = {}, deque(), threading.Condition()
         self.estado = {}
+        self.lanzador = Lanzador()
         yo = self
 
         class H(BaseHTTPRequestHandler):
@@ -388,6 +500,20 @@ class Web:
                     self.send_response(204); self.end_headers(); return
                 if self.path.startswith("/estado"):
                     return self._enviar(json.dumps(yo.estado).encode(), "application/json")
+                if self.path.startswith("/accion") or self.path.startswith("/proceso") or self.path.startswith("/modelos"):
+                    from urllib.parse import parse_qs, urlparse
+                    u = urlparse(self.path)
+                    prm = {k: v[0] for k, v in parse_qs(u.query).items()}
+                    if u.path == "/modelos":
+                        r = modelos_disponibles()
+                    elif u.path == "/proceso":
+                        r = yo.lanzador.estado()
+                    else:
+                        try:
+                            r = {"resultado": accion(yo.lanzador, prm.get("x", ""), prm)}
+                        except Exception as e:
+                            r = {"resultado": f"Error: {e}"}
+                    return self._enviar(json.dumps(r).encode(), "application/json")
                 if self.path.startswith("/stream"):
                     nombre = self.path.split("v=")[-1] if "v=" in self.path else "compuesta"
                     self.send_response(200)
