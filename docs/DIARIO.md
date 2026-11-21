@@ -113,3 +113,8 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 
 - **`todo_v1` SÍ suelta al apagar el láser** y funciona mucho mejor que `laser_v1`, pero con `-Bloque 10` va a trompicones. Se prueba suavizado (`-Coef 0.01` y `-Coef -0.05`).
 
+
+### Mapa de calor completo (95 episodios) — `docs/img/mapa_calor_completo.png`
+- Hoy (negro) se suelta donde se apaga el láser: columnas izquierda (≈19) y derecha (≈12) y centro (≈14); la fila lejana casi vacía (4 de 45).
+- El recorrido del láser cubre bien la cartulina, pero hay un **punto caliente falso en el soporte** (borde izquierdo): el filtro marca algo rojo del bote/soporte como láser en muchos fotogramas.
+
