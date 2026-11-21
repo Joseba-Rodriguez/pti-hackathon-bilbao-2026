@@ -9,7 +9,8 @@ param(
     [Parameter(Mandatory = $true)][string]$Modelo,
     [string]$Tarea = "pick up the cup from the holder",
     [int]$Segundos = 30,
-    [switch]$SinSuavizar
+    [switch]$SinSuavizar,
+    [int]$Bloque = 0     # >0: sin suavizado, re-planifica cada N pasos (p.ej. 10 = mas reactivo para seguir el laser)
 )
 
 Set-Location E:\HACKATONLeRobot\lerobot
@@ -32,5 +33,6 @@ $args = @(
     "--robot.max_relative_target=10",
     "--task=$Tarea", "--duration=$Segundos", "--display_data=true"
 )
-if (-not $SinSuavizar) { $args += @("--policy.n_action_steps=1", "--policy.temporal_ensemble_coeff=0.01") }
+if ($Bloque -gt 0) { $args += @("--policy.n_action_steps=$Bloque") }
+elseif (-not $SinSuavizar) { $args += @("--policy.n_action_steps=1", "--policy.temporal_ensemble_coeff=0.01") }
 & .\.venv\Scripts\python.exe @args

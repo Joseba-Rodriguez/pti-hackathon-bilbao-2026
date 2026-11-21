@@ -104,3 +104,6 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
   - `todo_v1`: `pti_todo_v7_laser` = `coger_v7` + láser (95 ep., blanco + negro), 15 000 pasos. Job `6b0193874fdc5ab3c55d2942`, modelo `Josebarv01/todo_v1_2026-11-21_12-50-08`.
 - Comando: `lerobot-train --job.target=a10g-large --job.timeout=3h --job.detach=true ...` (sube el dataset al Hub como privado).
 
+- Tras 3 fallos de arranque (versión de LeRobot de la imagen, sin `pip`, comillas) se usa `herramientas\entrenar_nube.ps1`, que instala nuestro commit (0.6.2) en la máquina. A10G: **6,25 pasos/s** (3,5× el portátil).
+- **`laser_v1` terminado** (13:23): 10 000 pasos, loss 0,344 → ~0,16. `Josebarv01/act_pti_laser_v1`, descargado en `lerobot\outputs\nube\laser_v1` y comprobado que carga en el portátil.
+
