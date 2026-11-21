@@ -72,8 +72,20 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 - Portátil: suspensión/hibernación "nunca" y cerrar tapa "no hacer nada" para entrenar de noche.
 - Siguiente: probar 020000 con `herramientas\probar.ps1` (ya con top + wrist); si falla, 015000 y 010000.
 
+### Prueba de `coger_v7` en el robot (sábado por la mañana)
+- 10 intentos con el checkpoint 020000, suavizado y `max_relative_target=10`.
+- **Coger: muy bien.** Coge el bote del soporte prácticamente siempre y sabe que está siempre en el mismo sitio.
+- **Dejar: siempre en el mismo sitio, haga lo que haga el láser.** Es lo esperado: en las 50 demostraciones el
+  láser estaba apagado y se dejaba en un sitio fijo, así que el modelo no ha aprendido a mirar el láser.
+- Fallos: en la 5 lanza el bote hacia arriba al soltar. En la 9 tarda hasta el final del tiempo en coger.
+  En la 7 se cambió el fondo (no tocarlo: el modelo se entrenó con la mesa blanca).
+- No tiembla como `coger_v2`: más datos (15 → 50 episodios), dos cámaras y el suavizado.
+- Conclusión: el **modelo 1 funciona**. Ir al láser es trabajo del **modelo 2**, que necesita demostraciones
+  con el láser encendido y destinos distintos.
+
 ## Tabla de resultados
 
 | Modelo | Checkpoint | Suavizado | Aciertos | Notas |
 | --- | --- | --- | --- | --- |
 | coger_v2 | 5000 | no | 1/5 | tiembla mucho |
+| coger_v7 | 20000 | sí | coger ~9/10 | deja siempre en el mismo sitio (no mira el láser); 1 lanzamiento |
