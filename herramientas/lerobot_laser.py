@@ -130,21 +130,68 @@ class MapaEnVivo:
             pass                                          # el mapa nunca debe parar la grabacion
 
 
+class AlGemelo:
+    """Envia por UDP local a herramientas/gemelo.py las articulaciones, el laser y la imagen
+    cenital. UDP sin conexion: si el gemelo no esta abierto, no pasa nada."""
+
+    def __init__(self):
+        import socket
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.t_img = 0.0
+
+    def _tx(self, datos: bytes, puerto: int):
+        try:
+            self.s.sendto(datos, ("127.0.0.1", puerto))
+        except Exception:
+            pass                                          # nunca debe parar el robot
+
+    def estado(self, q: dict):
+        self._tx(json.dumps({"q": q}).encode(), 5055)
+
+    def camara(self, bgr: np.ndarray, laser):
+        import time
+        self._tx(json.dumps({"laser": None if laser is None else list(laser[:2])}).encode(), 5055)
+        if time.time() - self.t_img > 0.08:               # ~12 imagenes/s, cabe en un datagrama
+            self.t_img = time.time()
+            ok, buf = cv2.imencode(".jpg", cv2.resize(bgr, (480, 360)), [cv2.IMWRITE_JPEG_QUALITY, 70])
+            if ok and len(buf) < 60000:
+                self._tx(buf.tobytes(), 5056)
+
+
 def instalar_filtro():
     from lerobot.cameras.opencv import camera_opencv as co
 
     original = co.OpenCVCamera._postprocess_image
     indice = CFG["camara"]["indice"]
     mapa = MapaEnVivo()
+    gemelo = AlGemelo()
 
     def _postprocess_image(self, image):
         if str(self.index_or_path) == str(indice):            # solo la camara cenital
             laser = buscar_laser(image)                       # image llega en BGR (OpenCV)
             mapa.enviar(image, laser)
             image = marcar(image)
+            gemelo.camara(image, laser)
         return original(self, image)
 
     co.OpenCVCamera._postprocess_image = _postprocess_image
+
+    try:                                                  # articulaciones reales -> gemelo digital
+        from lerobot.robots.so_follower.so_follower import SOFollower
+        obs_original = SOFollower.get_observation
+
+        def get_observation(self, *a, **k):
+            obs = obs_original(self, *a, **k)
+            try:
+                gemelo.estado({kk[:-4]: float(v) for kk, v in obs.items() if kk.endswith(".pos")})
+            except Exception:
+                pass
+            return obs
+
+        SOFollower.get_observation = get_observation
+        print("[gemelo] enviando articulaciones y camara a herramientas/gemelo.py (UDP 5055/5056)")
+    except Exception as e:
+        print(f"[gemelo] no disponible: {e}")
     print(f"[filtro laser] activo en la camara {indice} (umbral {UMBRAL}, circulo {RADIO} px)")
 
 
