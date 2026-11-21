@@ -125,3 +125,5 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 - `pti_todo_v2` = `pti_todo_v7_laser` + H = 123 episodios. Subido al Hub (privado; hizo falta crear la etiqueta `v3.0`).
 - `todo_v2` entrenando en la nube **desde `todo_v1`**, 10 000 pasos. `todo_v1` no se toca: solo se cambia si `todo_v2` gana en 10 intentos con los mismos puntos.
 
+- **`todo_v2` terminado** (~16:42): 10 000 pasos desde `todo_v1` con 123 episodios, loss ~0,16. `Josebarv01/act_pti_todo_v2` → `lerobot\outputs\nube\todo_v2`; carga en el portátil.
+
