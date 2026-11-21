@@ -221,6 +221,7 @@ def main():
     ap.add_argument("--mision", choices=list(MISIONES), default="lab")
     ap.add_argument("--demo", type=int, default=None, help="episodio de pti_coger_v7 a reproducir sin robot")
     ap.add_argument("--captura", default=None, help="guarda una captura a los 12 s y sale (para pruebas)")
+    ap.add_argument("--sin-navegador", action="store_true", help="no abrir el navegador (ya esta abierto)")
     a = ap.parse_args()
     t_inicio = time.time()
 
@@ -231,7 +232,7 @@ def main():
     t_laser = t_suelta = 0.0
     n_mov, girar = 0, True
     web = Web()
-    if not a.captura:
+    if not a.captura and not a.sin_navegador:
         import webbrowser
         webbrowser.open(f"http://127.0.0.1:{PUERTO_WEB}/")
         print(f"[gemelo] abierto en el navegador: http://127.0.0.1:{PUERTO_WEB}/  (F11 pantalla completa, Ctrl+C aqui para salir)")
@@ -321,6 +322,17 @@ def main():
             cv2.imwrite(a.captura, lienzo)
             break
         web.publicar(lienzo)
+        web.publicar(vista, "3d")
+        if cam is not None:
+            web.publicar(cam, "camara")
+        web.estado = {
+            "vivo": bool(vivo), "edad": edad, "fase": int(f), "cogido": bool(g.cogido),
+            "laser": bool(time.time() - t_laser < 1.0), "pinza": pinza, "movimientos": n_mov,
+            "q": {k: round(float(v), 1) for k, v in (q or {}).items()},
+            "punta_cm": [round(float(x), 1) for x in g.punta() * 100] if q else None,
+            "registro": [f"{h}  {s}" for h, s in registro], "demo": a.demo is not None,
+            "suelta_hace": (time.time() - t_suelta) if t_suelta else None,
+        }
         time.sleep(0.02)
         while web.teclas:
             k = web.teclas.popleft()
@@ -348,22 +360,36 @@ img{max-width:100vw;max-height:100vh}#b{position:fixed;bottom:6px;right:8px;opac
 if(k){fetch('/tecla?k='+k);e.preventDefault()}}</script></body></html>"""
 
 
+WEB_HTML = AQUI / "gemelo_web.html"   # web "celda caliente" (Pu-239); la vista clasica sigue en /clasico
+
+
 class Web:
     def __init__(self):
         import threading
         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-        self.jpg, self.teclas, self.cond = None, deque(), threading.Condition()
+        self.jpgs, self.teclas, self.cond = {}, deque(), threading.Condition()
+        self.estado = {}
         yo = self
 
         class H(BaseHTTPRequestHandler):
             def log_message(self, *a):
                 pass
 
+            def _enviar(self, cuerpo: bytes, tipo: str):
+                self.send_response(200)
+                self.send_header("Content-Type", tipo)
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(cuerpo)
+
             def do_GET(self):
                 if self.path.startswith("/tecla"):
                     yo.teclas.append(self.path.split("k=")[-1])
                     self.send_response(204); self.end_headers(); return
+                if self.path.startswith("/estado"):
+                    return self._enviar(json.dumps(yo.estado).encode(), "application/json")
                 if self.path.startswith("/stream"):
+                    nombre = self.path.split("v=")[-1] if "v=" in self.path else "compuesta"
                     self.send_response(200)
                     self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=f")
                     self.end_headers()
@@ -371,27 +397,26 @@ class Web:
                         while True:
                             with yo.cond:
                                 yo.cond.wait(1.0)
-                                jpg = yo.jpg
+                                jpg = yo.jpgs.get(nombre)
                             if jpg is None:
                                 continue
                             self.wfile.write(b"--f\r\nContent-Type: image/jpeg\r\nContent-Length: "
                                              + str(len(jpg)).encode() + b"\r\n\r\n" + jpg + b"\r\n")
                     except (ConnectionError, OSError):
                         return
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.end_headers()
-                self.wfile.write(PAGINA)
+                if self.path.startswith("/clasico") or not WEB_HTML.exists():
+                    return self._enviar(PAGINA, "text/html; charset=utf-8")
+                self._enviar(WEB_HTML.read_bytes(), "text/html; charset=utf-8")
 
         self.srv = ThreadingHTTPServer(("127.0.0.1", PUERTO_WEB), H)
         self.srv.daemon_threads = True
         threading.Thread(target=self.srv.serve_forever, daemon=True).start()
 
-    def publicar(self, img):
+    def publicar(self, img, nombre: str = "compuesta"):
         ok, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 85])
         if ok:
             with self.cond:
-                self.jpg = buf.tobytes()
+                self.jpgs[nombre] = buf.tobytes()
                 self.cond.notify_all()
 
 
