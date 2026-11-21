@@ -64,7 +64,6 @@ operador no se convierta en un patrón.
 | pti_laser_C_curva | 8 | 8 | — | |
 | pti_laser_D_paradas | 8 | 8 | — | |
 | pti_laser_E_cambio_sentido | 12 | 8 | 0, 1, 2, 5 | 0: 5,9 s vacío; 1 y 2: 60 s sin láser; 5: no fue bien (decisión del equipo). 6–11 rehechos, buenos |
-
 | pti_laser_G_quieto | 4 | 3 | 0 | 0: no se ve el láser en ningún momento |
 | (F salto) | — | — | — | no se graba (decisión del equipo) |
 
