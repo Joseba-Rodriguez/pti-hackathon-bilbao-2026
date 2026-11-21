@@ -64,6 +64,14 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
   - Hugging Face Hub: https://huggingface.co/datasets/Josebarv01/pti_coger_v7 (público, tamaños verificados).
   - Local: `E:\HACKATONLeRobot\_copias\pti_coger_v7_50ep`.
 
+### Entrenamiento `coger_v7` (noche, 00:14 → 03:27)
+- ACT, 20 000 pasos, batch 8, checkpoints cada 2 500. 3 h 12 min (1,74 pasos/s con dos cámaras).
+- Loss: 7,14 (paso 200) → 0,155 (paso 20 000). 3,65 épocas.
+- Modelo: `lerobot\outputs\train\coger_v7\checkpoints\{002500 ... 020000, last}` y en el Hub
+  https://huggingface.co/Josebarv01/act_pti_coger_v7.
+- Portátil: suspensión/hibernación "nunca" y cerrar tapa "no hacer nada" para entrenar de noche.
+- Siguiente: probar 020000 con `herramientas\probar.ps1` (ya con top + wrist); si falla, 015000 y 010000.
+
 ## Tabla de resultados
 
 | Modelo | Checkpoint | Suavizado | Aciertos | Notas |

@@ -1,6 +1,7 @@
 # Prueba un modelo en el robot VIENDO LA CAMARA EN DIRECTO (ventana de Rerun).
 # Uso:
-#   powershell -ExecutionPolicy Bypass -File ..\herramientas\probar.ps1 -Modelo outputs/train/coger_v3/checkpoints/last/pretrained_model
+#   powershell -ExecutionPolicy Bypass -File ..\herramientas\probar.ps1 -Modelo outputs/train/coger_v7/checkpoints/last/pretrained_model
+# Camaras top (2) + wrist (1), como pti_coger_v7. (coger_v2 era solo top: no vale este script.)
 # Opcionales: -Tarea "pick up the cup from the holder"  -Segundos 30  -SinSuavizar
 # Siempre con el filtro de laser (igual que al grabar). MUEVE EL BRAZO.
 
@@ -27,7 +28,7 @@ $args = @(
     "..\herramientas\lerobot_laser.py", "rollout", "--strategy.type=base",
     "--policy.path=$Modelo",
     "--robot.type=so101_follower", "--robot.port=$follower", "--robot.id=follower_puesto",
-    "--robot.cameras={ top: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30} }",
+    "--robot.cameras={ top: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30}, wrist: {type: opencv, index_or_path: 1, width: 640, height: 480, fps: 30} }",
     "--robot.max_relative_target=10",
     "--task=$Tarea", "--duration=$Segundos", "--display_data=true"
 )
