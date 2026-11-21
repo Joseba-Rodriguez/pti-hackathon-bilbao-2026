@@ -315,6 +315,20 @@ def main():
         def _parar(*_):
             raise KeyboardInterrupt
         signal.signal(signal.SIGBREAK, _parar)
+    # Al conectar, lerobot escribe la configuracion de cada servo (par, Lock...) con UN solo intento
+    # (num_retry=0): un paquete perdido en el bus y se cae todo ("There is no status packet").
+    # Reintentamos esas escrituras sueltas hasta 3 veces. Las ordenes de movimiento van por sync_write
+    # y no pasan por aqui.
+    try:
+        from lerobot.motors.feetech.feetech import FeetechMotorsBus
+        _write = FeetechMotorsBus.write
+
+        def write(self, *a, num_retry: int = 0, **k):
+            return _write(self, *a, num_retry=max(num_retry, 3), **k)
+
+        FeetechMotorsBus.write = write
+    except Exception as e:
+        print(f"[reintentos] no aplicados: {e}")
     aplicar_exposicion()
     instalar_filtro()
     sys.argv = [f"lerobot-{modo}"] + resto
