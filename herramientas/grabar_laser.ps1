@@ -6,13 +6,13 @@
 # MUEVE EL BRAZO (teleoperado con el leader).
 
 param(
-    [Parameter(Mandatory = $true)][ValidateSet("A", "B", "C", "D", "E", "F", "G")][string]$Tipo,
+    [Parameter(Mandatory = $true)][ValidateSet("A", "B", "C", "D", "E", "F", "G", "H")][string]$Tipo,
     [int]$Episodios = 0
 )
 
 $tipos = @{
     "A" = @("recta_corta", 10); "B" = @("recta_larga", 10); "C" = @("curva", 8); "D" = @("paradas", 8)
-    "E" = @("cambio_sentido", 6); "F" = @("salto", 4); "G" = @("quieto", 4)
+    "E" = @("cambio_sentido", 6); "F" = @("salto", 4); "G" = @("quieto", 4); "H" = @("centro", 30)
 }
 $nombre = "pti_laser_" + $Tipo + "_" + $tipos[$Tipo][0]
 $total = if ($Episodios -gt 0) { $Episodios } else { $tipos[$Tipo][1] }
