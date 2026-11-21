@@ -7,48 +7,74 @@
 <style>
 :root{
   --bg:#07090a; --panel:#0e1213; --line:#1f2a2c; --text:#d8e2e0; --dim:#6f7f7c;
-  --amber:#ffb000; --amber-d:#4a3500; --red:#ff3b30; --green:#36e27a; --cyan:#4fd6ff;
+  --amber:#ffb000; --red:#ff3b30; --green:#36e27a; --cyan:#4fd6ff;
+  --acento:var(--amber);
   --mono: ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
 }
+body.luna{--acento:var(--cyan)}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--mono)}
-body{display:grid;grid-template-rows:auto 1fr auto;min-height:100vh}
+body{display:grid;grid-template-rows:auto auto 1fr auto auto;min-height:100vh;overflow:hidden}
+/* textura CRT */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:repeating-linear-gradient(0deg,#ffffff05 0 1px,transparent 1px 3px)}
+/* viñeta roja cuando el material esta fuera del blindaje */
+#vineta{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;transition:opacity .6s;
+  box-shadow:inset 0 0 160px 30px #ff1e0f66}
+body.peligro #vineta{opacity:1;animation:latido 1.2s infinite}
+@keyframes latido{50%{box-shadow:inset 0 0 220px 50px #ff1e0f88}}
+
 /* cabecera */
-header{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);
+header{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);
   background:repeating-linear-gradient(135deg,#0b0d0e 0 14px,#0d1011 14px 28px)}
 .trefoil{width:42px;height:42px;flex:none}
-.trefoil .bg{fill:var(--amber)} .trefoil .fg{fill:#111}
-.alerta .trefoil{animation:pulso 1s infinite}
-@keyframes pulso{50%{filter:drop-shadow(0 0 10px var(--amber));transform:scale(1.06)}}
-.tit h1{margin:0;font-size:18px;letter-spacing:.12em;color:var(--amber)}
+.trefoil .bg{fill:var(--acento)}
+body.peligro .trefoil{animation:pulso .8s infinite}
+@keyframes pulso{50%{filter:drop-shadow(0 0 12px var(--acento));transform:scale(1.08)}}
+.tit h1{margin:0;font-size:18px;letter-spacing:.12em;color:var(--acento)}
 .tit div{font-size:11px;color:var(--dim);letter-spacing:.18em}
 .sp{flex:1}
 .vivo{display:flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.15em}
 .punto{width:11px;height:11px;border-radius:50%;background:var(--dim)}
 .on .punto{background:var(--red);animation:parp 1s steps(2) infinite}
 @keyframes parp{50%{opacity:.2}}
-.reloj{font-size:22px;color:var(--text);min-width:110px;text-align:right}
+.reloj{font-size:22px;min-width:110px;text-align:right}
 button{font:inherit;font-size:12px;color:var(--text);background:#151b1c;border:1px solid var(--line);
   padding:7px 10px;cursor:pointer;letter-spacing:.08em}
-button:hover{border-color:var(--amber);color:var(--amber)}
+button:hover{border-color:var(--acento);color:var(--acento)}
+button.on{border-color:var(--acento);color:var(--acento)}
+
+/* franja de mision */
+#mision{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:22px;align-items:center;padding:8px 18px;
+  border-bottom:1px solid var(--line);background:#0a0d0e;font-size:12px}
+#mision .et{color:var(--dim);font-size:10px;letter-spacing:.18em;display:block}
+#mision b{font-weight:normal;font-size:15px}
+#mision .brief{color:#b9c6c3;line-height:1.4}
+#tmision{font-size:24px;color:var(--acento)}
+#retardo{display:none} body.luna #retardo{display:block}
+
 /* cuerpo */
 main{display:grid;grid-template-columns:1.25fr 1fr 360px;gap:12px;padding:12px;min-height:0}
 .panel{background:var(--panel);border:1px solid var(--line);position:relative;display:flex;flex-direction:column;min-height:0}
 .panel h2{margin:0;padding:8px 12px;font-size:11px;letter-spacing:.2em;color:var(--dim);border-bottom:1px solid var(--line);
   display:flex;justify-content:space-between}
-.panel h2 b{color:var(--amber);font-weight:normal}
-.video{flex:1;display:flex;align-items:center;justify-content:center;background:#000;min-height:0;overflow:hidden}
+.panel h2 b{color:var(--acento);font-weight:normal}
+.video{flex:1;display:flex;align-items:center;justify-content:center;background:#000;min-height:0;overflow:hidden;position:relative}
 .video img{max-width:100%;max-height:100%;display:block}
-.esq::before,.esq::after{content:"";position:absolute;width:18px;height:18px;border:2px solid var(--amber);pointer-events:none}
+.retic{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(var(--acento),var(--acento)) center/1px 26px no-repeat,
+             linear-gradient(var(--acento),var(--acento)) center/26px 1px no-repeat;opacity:.35}
+.sello{position:absolute;left:10px;bottom:10px;font-size:10px;letter-spacing:.15em;color:var(--acento);
+  background:#000a;padding:4px 7px;border:1px solid var(--acento)}
+.esq::before,.esq::after{content:"";position:absolute;width:18px;height:18px;border:2px solid var(--acento);pointer-events:none;z-index:2}
 .esq::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
 .esq::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
 .col{display:flex;flex-direction:column;gap:12px;min-height:0}
-/* fases */
 .fases{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px}
 .fase{border:1px solid var(--line);padding:10px 6px;text-align:center;font-size:13px;letter-spacing:.12em;color:var(--dim);transition:.2s}
 .fase small{display:block;font-size:10px;margin-top:4px;letter-spacing:.05em}
+.fase.hecha{color:var(--green);border-color:#1d5a36}
 .fase.act{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 0 18px #ff3b3088}
-/* geiger */
 .geiger{padding:12px}
 .cpm{font-size:46px;line-height:1;color:var(--green);text-shadow:0 0 12px #36e27a55}
 .cpm.alto{color:var(--amber);text-shadow:0 0 14px #ffb00088}
@@ -56,27 +82,59 @@ main{display:grid;grid-template-columns:1.25fr 1fr 360px;gap:12px;padding:12px;m
 .barra{height:10px;background:#0a0d0e;border:1px solid var(--line);margin:10px 0 4px;position:relative}
 .barra i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--green),var(--amber),var(--red));transition:width .3s}
 .escala{display:flex;justify-content:space-between;font-size:10px;color:var(--dim)}
-canvas{width:100%;height:60px;display:block;margin-top:8px}
-/* datos */
+canvas{width:100%;height:56px;display:block;margin-top:8px}
 .datos{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
 .dato{border:1px solid var(--line);padding:8px}
 .dato span{display:block;font-size:10px;color:var(--dim);letter-spacing:.12em}
 .dato b{font-size:20px;font-weight:normal}
 .verde{color:var(--green)} .ambar{color:var(--amber)} .rojo{color:var(--red)} .cian{color:var(--cyan)}
-.estado-cont{padding:12px;font-size:15px;letter-spacing:.1em}
+.estado-cont{padding:0 12px 12px;font-size:14px;letter-spacing:.08em}
 .registro{flex:1;overflow:auto;padding:8px 12px;font-size:12px;line-height:1.7;min-height:80px}
 .registro div{border-bottom:1px dashed #1a2224;color:#b9c6c3}
-/* pie */
-footer{display:flex;align-items:center;gap:14px;padding:9px 18px;border-top:1px solid var(--line);font-size:13px;overflow:hidden}
-footer .lema{color:var(--amber);letter-spacing:.15em;white-space:nowrap}
-footer .narr{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-footer .aviso{color:var(--dim);font-size:10px;white-space:nowrap}
-@media (max-width:1100px){main{grid-template-columns:1fr}}
+.registro div:first-child{color:var(--acento)}
+
+/* pie: narrador + teletipo */
+footer{display:flex;align-items:center;gap:14px;padding:9px 18px;border-top:1px solid var(--line);font-size:14px}
+footer .lema{color:var(--acento);letter-spacing:.15em;white-space:nowrap}
+#narr{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#narr::after{content:"▌";animation:parp 1s steps(2) infinite;color:var(--acento)}
+.teletipo{border-top:1px solid var(--line);background:#050707;overflow:hidden;white-space:nowrap;font-size:11px;color:var(--dim);padding:5px 0}
+.teletipo span{display:inline-block;padding-left:100%;animation:corre 70s linear infinite}
+@keyframes corre{to{transform:translateX(-100%)}}
+.teletipo b{color:var(--acento);font-weight:normal;margin:0 6px}
+
+/* titulares de fase */
+#titular{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%) scale(.9);z-index:45;pointer-events:none;
+  text-align:center;opacity:0;transition:opacity .25s,transform .25s}
+#titular.ver{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#titular .caja{background:#000d;border:2px solid var(--acento);padding:18px 40px;box-shadow:0 0 40px #000}
+#titular .sup{font-size:12px;letter-spacing:.4em;color:var(--dim)}
+#titular .t{font-size:42px;letter-spacing:.12em;color:var(--acento);margin:6px 0}
+#titular .sub{font-size:14px;color:var(--text)}
+#titular.rojo .caja{border-color:var(--red)} #titular.rojo .t{color:var(--red)}
+#titular.verde .caja{border-color:var(--green)} #titular.verde .t{color:var(--green)}
+
+/* arranque y resumen */
+.capa{position:fixed;inset:0;z-index:60;background:#030505;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.capa.oculta{display:none}
+#boot pre{font-size:15px;line-height:1.8;color:var(--green);min-width:620px;margin:0 0 26px}
+#boot h1{font-size:44px;letter-spacing:.3em;color:var(--amber);margin:0 0 6px}
+#boot .lema{color:var(--dim);letter-spacing:.3em;margin-bottom:30px}
+#boot button{font-size:16px;padding:14px 30px;letter-spacing:.25em;border-color:var(--amber);color:var(--amber)}
+#resumen{background:#030505ee}
+#resumen .caja{border:2px solid var(--green);padding:28px 40px;min-width:560px;background:#070b0a}
+#resumen h2{margin:0 0 4px;color:var(--green);letter-spacing:.25em;font-size:26px}
+#resumen .sub{color:var(--dim);letter-spacing:.2em;font-size:12px;margin-bottom:18px}
+#resumen table{width:100%;border-collapse:collapse;font-size:15px}
+#resumen td{padding:7px 0;border-bottom:1px dashed #1a2a24}
+#resumen td:last-child{text-align:right;color:var(--acento)}
+#resumen button{margin-top:18px;width:100%;padding:11px;letter-spacing:.2em}
+
 /* panel de control */
-#ctl{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:100vw;background:#0b0f10;border-left:2px solid var(--amber);
-  transform:translateX(105%);transition:transform .25s;z-index:20;display:flex;flex-direction:column;box-shadow:-20px 0 40px #000a}
+#ctl{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:100vw;background:#0b0f10;border-left:2px solid var(--acento);
+  transform:translateX(105%);transition:transform .25s;z-index:55;display:flex;flex-direction:column;box-shadow:-20px 0 40px #000a}
 #ctl.abierto{transform:none}
-#ctl h3{margin:0;padding:14px 16px;font-size:13px;letter-spacing:.2em;color:var(--amber);border-bottom:1px solid var(--line);
+#ctl h3{margin:0;padding:14px 16px;font-size:13px;letter-spacing:.2em;color:var(--acento);border-bottom:1px solid var(--line);
   display:flex;justify-content:space-between;align-items:center}
 .paso{padding:12px 16px;border-bottom:1px solid var(--line)}
 .paso label{display:block;font-size:11px;color:var(--dim);letter-spacing:.12em;margin-bottom:6px}
@@ -93,48 +151,87 @@ footer .aviso{color:var(--dim);font-size:10px;white-space:nowrap}
 .corriendo #btnParar{display:inline-block}
 #consola{flex:1;overflow:auto;margin:0;padding:10px 16px;font-size:11px;line-height:1.5;color:#9fb3ae;white-space:pre-wrap;background:#060809}
 #msg{font-size:12px;color:var(--amber);min-height:16px;margin-top:8px}
+@media (max-width:1100px){main{grid-template-columns:1fr} body{overflow:auto}}
 </style>
 </head>
 <body>
+<div id="vineta"></div>
+
+<!-- ============ ARRANQUE ============ -->
+<div id="boot" class="capa">
+  <h1>P T I</h1>
+  <div class="lema">TÚ APUNTAS · EL ROBOT HACE EL RESTO</div>
+  <pre id="bootlog"></pre>
+  <button id="btnEntrar" style="visibility:hidden">▶ ENTRAR EN LA CELDA</button>
+</div>
+
+<!-- ============ RESUMEN DE MISION ============ -->
+<div id="resumen" class="capa oculta">
+  <div class="caja">
+    <h2>✔ TRASLADO COMPLETADO</h2>
+    <div class="sub" id="resSub">LOTE Pu-239 · INFORME AUTOMÁTICO</div>
+    <table>
+      <tr><td>Duración de la operación</td><td id="rTiempo">—</td></tr>
+      <tr><td>Destino (punta del brazo)</td><td id="rDestino">—</td></tr>
+      <tr><td>Dosis recibida por el operador</td><td class="verde">0,00 µSv</td></tr>
+      <tr><td>Exposición evitada (estimación ilustrativa)</td><td id="rEvitada">—</td></tr>
+      <tr><td>Manos humanas dentro de la celda</td><td>0</td></tr>
+      <tr><td>Órdenes del operador</td><td>1 punto láser</td></tr>
+    </table>
+    <button onclick="cerrarResumen()">CONTINUAR · SIGUIENTE LOTE</button>
+  </div>
+</div>
+
+<div id="titular"><div class="caja"><div class="sup" id="tSup"></div><div class="t" id="tT"></div><div class="sub" id="tSub"></div></div></div>
+
 <header id="cab">
   <svg class="trefoil" viewBox="-50 -50 100 100" aria-hidden="true">
     <circle class="bg" r="48"/>
-    <g class="fg">
-      <circle r="8"/>
-      <path d="M0 0 L41 -24 A47 47 0 0 1 41 24 Z" transform="rotate(-90) translate(0,0)"/>
+    <g fill="#111">
+      <path d="M0 0 L41 -24 A47 47 0 0 1 41 24 Z" transform="rotate(-90)"/>
       <path d="M0 0 L41 -24 A47 47 0 0 1 41 24 Z" transform="rotate(30)"/>
       <path d="M0 0 L41 -24 A47 47 0 0 1 41 24 Z" transform="rotate(150)"/>
-      <circle r="13" fill="var(--amber)"/>
-      <circle r="8"/>
     </g>
+    <circle r="13" class="bg"/><circle r="8" fill="#111"/>
   </svg>
   <div class="tit">
-    <h1>CELDA CALIENTE 03 · MANIPULACIÓN REMOTA DE Pu-239</h1>
-    <div>PTI · SO-101 + LeRobot · ACT entrenado en 48 h · Bilbao 2026</div>
+    <h1 id="titulo">CELDA CALIENTE 03 · MANIPULACIÓN REMOTA DE Pu-239</h1>
+    <div id="subtitulo">PTI · SO-101 + LeRobot · ACT entrenado en 48 h · Bilbao 2026</div>
   </div>
   <div class="sp"></div>
   <button id="btnParar" class="stop" onclick="accion('parar')">■ PARAR ROBOT</button>
+  <button id="bLab" class="on" onclick="modo('lab')">LAB</button>
+  <button id="bLuna" onclick="modo('luna')">LUNA</button>
+  <button id="bVoz">🗣 NARRADOR</button>
+  <button id="sonido">🔇 GEIGER</button>
   <button onclick="$('ctl').classList.toggle('abierto')">⚙ CONTROL</button>
-  <button id="sonido">🔇 ACTIVAR GEIGER</button>
-  <button onclick="fetch('/tecla?k=giro')">GIRO 3D</button>
-  <button onclick="fetch('/tecla?k=reiniciar')">REINICIAR</button>
   <div class="vivo" id="vivo"><div class="punto"></div><span id="vivotxt">ESPERANDO ROBOT</span></div>
   <div class="reloj" id="reloj">--:--:--</div>
 </header>
 
+<section id="mision">
+  <div><span class="et">LOTE</span><b id="lote">Pu-239 · #A-0347</b></div>
+  <div class="brief" id="brief">Contenedor sellado en el almacén blindado. Orden: trasladarlo a la zona de análisis
+    que marque el operador, sin que ninguna persona entre en la celda.</div>
+  <div id="retardo"><span class="et">ENLACE TIERRA–LUNA</span><b class="cian" id="retTxt">1,3 s por trayecto</b></div>
+  <div><span class="et">ESTADO</span><b id="estadoMision" class="verde">CELDA SELLADA</b></div>
+  <div><span class="et">TIEMPO DE OPERACIÓN</span><b id="tmision">T+00:00</b></div>
+</section>
+
 <main>
   <section class="panel esq">
-    <h2><span>CÁMARA CENITAL · INTERIOR DE LA CELDA</span><b>REAL</b></h2>
-    <div class="video"><img src="/stream?v=camara" alt="cámara real"></div>
+    <h2><span id="hCam">CÁMARA CENITAL · INTERIOR DE LA CELDA</span><b>REAL</b></h2>
+    <div class="video"><img src="/stream?v=camara" alt="cámara real"><div class="retic"></div>
+      <div class="sello" id="selloCam">CAM-03 · BLINDAJE 1,2 m Pb-EQ</div></div>
   </section>
 
   <div class="col">
     <section class="panel esq" style="flex:1">
       <h2><span>GEMELO DIGITAL · MuJoCo</span><b>SIMULADO EN DIRECTO</b></h2>
-      <div class="video"><img src="/stream?v=3d" alt="gemelo 3D"></div>
+      <div class="video"><img src="/stream?v=3d" alt="gemelo 3D"><div class="sello">COPIA LAS ARTICULACIONES REALES</div></div>
     </section>
     <section class="panel">
-      <h2><span>PROTOCOLO</span><b id="fasetxt">—</b></h2>
+      <h2><span>PROTOCOLO DE TRASLADO</span><b id="fasetxt">—</b></h2>
       <div class="fases">
         <div class="fase" id="f0">1 APUNTA<small>operador marca destino</small></div>
         <div class="fase" id="f1">2 COGE<small>extracción del almacén</small></div>
@@ -146,21 +243,21 @@ footer .aviso{color:var(--dim);font-size:10px;white-space:nowrap}
 
   <div class="col">
     <section class="panel">
-      <h2><span>CONTADOR GEIGER · SONDA INTERIOR</span><b>Pu-239</b></h2>
+      <h2><span>CONTADOR GEIGER · SONDA INTERIOR</span><b>SIMULADO</b></h2>
       <div class="geiger">
-        <div class="cpm" id="cpm">0<small>CPM</small></div>
-        <div class="barra"><i id="barra" style="width:0%"></i></div>
+        <div class="cpm" id="cpm">30<small>CPM</small></div>
+        <div class="barra"><i id="barra" style="width:10%"></i></div>
         <div class="escala"><span>10</span><span>100</span><span>1k</span><span>10k</span></div>
-        <canvas id="hist" width="320" height="60"></canvas>
+        <canvas id="hist" width="320" height="56"></canvas>
       </div>
     </section>
     <section class="panel">
-      <h2><span>EXPOSICIÓN</span><b>SIMULADA</b></h2>
+      <h2><span>EXPOSICIÓN HUMANA</span><b>SIMULADA</b></h2>
       <div class="datos">
-        <div class="dato"><span>DOSIS OPERADOR</span><b class="verde" id="dosisOp">0,00 µSv</b></div>
+        <div class="dato"><span>DOSIS OPERADOR</span><b class="verde">0,00 µSv</b></div>
         <div class="dato"><span>SI FUERA A MANO*</span><b class="ambar" id="dosisMano">0,0 µSv</b></div>
         <div class="dato"><span>MANOS EN ZONA</span><b class="verde">0</b></div>
-        <div class="dato"><span>MOVIMIENTOS</span><b class="cian" id="movs">0</b></div>
+        <div class="dato"><span>LOTES MOVIDOS</span><b class="cian" id="movs">0</b></div>
       </div>
       <div class="estado-cont">CONTENEDOR: <b id="cont" class="verde">EN ALMACÉN BLINDADO</b></div>
     </section>
@@ -171,6 +268,13 @@ footer .aviso{color:var(--dim);font-size:10px;white-space:nowrap}
   </div>
 </main>
 
+<footer>
+  <span class="lema">▸ NARRADOR</span>
+  <span id="narr">Esperando señal del robot</span>
+</footer>
+<div class="teletipo"><span id="teletipo"></span></div>
+
+<!-- ============ PANEL DE CONTROL ============ -->
 <aside id="ctl">
   <h3><span>⚙ PANEL DE CONTROL</span><button onclick="$('ctl').classList.remove('abierto')">✕</button></h3>
   <div class="paso">
@@ -207,27 +311,105 @@ footer .aviso{color:var(--dim);font-size:10px;white-space:nowrap}
   <pre id="consola">Sin procesos.</pre>
 </aside>
 
-<footer>
-  <span class="lema">TÚ APUNTAS. EL ROBOT HACE EL RESTO.</span>
-  <span class="narr" id="narr">Esperando señal del robot…</span>
-  <span class="sp"></span>
-  <span class="aviso">Concepto de demostración: contenedor vacío, radiación y dosis SIMULADAS. *Estimación ilustrativa.</span>
-</footer>
-
 <script>
 const $ = id => document.getElementById(id);
-const NARR = [
-  "Operador fuera de la celda: marca el destino con el láser.",
-  "Extrayendo el contenedor de Pu-239 del almacén blindado.",
-  "Contenedor en tránsito: el brazo sigue el punto del láser.",
-  "Contenedor depositado. Ninguna mano humana ha entrado en la celda.",
+const fmt = s => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+// ---------------- textos de cada modo (solo datos verificables en el teletipo)
+const MODOS = {
+  lab: {
+    titulo: "CELDA CALIENTE 03 · MANIPULACIÓN REMOTA DE Pu-239",
+    sub: "PTI · SO-101 + LeRobot · ACT entrenado en 48 h · Bilbao 2026",
+    cam: "CÁMARA CENITAL · INTERIOR DE LA CELDA", sello: "CAM-03 · BLINDAJE 1,2 m Pb-EQ",
+    brief: "Contenedor sellado en el almacén blindado. Orden: trasladarlo a la zona de análisis que marque el operador, sin que ninguna persona entre en la celda.",
+    lote: "Pu-239 · #A-0347",
+    narr: ["El operador, fuera de la celda, marca el destino con el láser.",
+           "Extrayendo el contenedor del almacén blindado. La radiación sube.",
+           "Contenedor en tránsito. El brazo sigue el punto del láser.",
+           "Contenedor depositado. Ninguna mano humana ha entrado en la celda."],
+    teletipo: ["Pu-239: semivida de unos 24 100 años", "Límite de dosis profesional en la UE: 20 mSv al año (Directiva 2013/59/Euratom)",
+               "Hoy estas tareas se hacen con telemanipuladores maestro-esclavo y operadores formados",
+               "PTI: un puntero láser y una política aprendida por imitación", "Entrenado con demostraciones humanas grabadas en este hackathon",
+               "Radiación y dosis de esta pantalla: SIMULADAS · contenedor vacío"],
+  },
+  luna: {
+    titulo: "MISIÓN ARTEMIS · POLO SUR LUNAR · MUESTREO REMOTO",
+    sub: "PTI · rover + brazo SO-101 · autonomía supervisada desde la Tierra",
+    cam: "CÁMARA DEL ROVER · CRÁTER SHACKLETON", sello: "ROVER-01 · ENLACE TIERRA–LUNA",
+    brief: "Muestra de regolito sellada en el compartimento del rover. Orden desde la Tierra: depositarla en el punto que marque el láser del control de misión.",
+    lote: "REGOLITO · #LS-0012",
+    narr: ["Control de misión marca el objetivo. La orden tarda 1,3 s en llegar a la Luna.",
+           "El rover extrae la muestra. Decide solo: no espera instrucciones de la Tierra.",
+           "Muestra en tránsito. El brazo sigue el objetivo sin teleoperación.",
+           "Muestra depositada. Confirmación en camino hacia la Tierra."],
+    teletipo: ["La luz tarda unos 1,3 s de la Luna a la Tierra: 2,6 s ida y vuelta",
+               "Con 2,6 s de retraso, teleoperar un brazo en directo es casi imposible",
+               "Solución: autonomía supervisada; la Tierra marca el objetivo, el robot ejecuta",
+               "PTI: la misma interfaz en el laboratorio y en la Luna, un punto", "Demostración en la Tierra · entorno lunar simulado"],
+  },
+};
+let modoActual = "lab";
+function modo(m) {
+  if (m !== modoActual) fetch("/tecla?k=mision");          // cambia el escenario 3D
+  modoActual = m; const M = MODOS[m];
+  document.body.classList.toggle("luna", m === "luna");
+  $("bLab").classList.toggle("on", m === "lab"); $("bLuna").classList.toggle("on", m === "luna");
+  $("titulo").textContent = M.titulo; $("subtitulo").textContent = M.sub; $("hCam").textContent = M.cam;
+  $("selloCam").textContent = M.sello; $("brief").textContent = M.brief; $("lote").textContent = M.lote;
+  $("teletipo").innerHTML = M.teletipo.map(t => `<b>◆</b>${t}`).join("   ");
+  decir(m === "luna" ? "Modo misión lunar." : "Modo laboratorio. Celda caliente tres.");
+}
+
+// ---------------- arranque
+const BOOT = [
+  "PTI OS 1.0 · secuencia de arranque",
+  "> enlace con brazo SO-101 (6 servos)............ OK",
+  "> cámara cenital + cámara de muñeca............. OK",
+  "> política ACT cargada (aprendida por imitación) OK",
+  "> detector de láser............................. OK",
+  "> gemelo digital MuJoCo......................... OK",
+  "> celda sellada · presión negativa.............. OK",
+  "> SISTEMA LISTO. Operador fuera de la zona.",
 ];
-let est = {}, cpm = 30, objetivo = 30, dosisMano = 0, ultimo = performance.now(), hist = [];
+(async function arrancar() {
+  if (location.search.includes("directo")) { $("boot").classList.add("oculta"); return; }   // saltar la intro
+  const pre = $("bootlog");
+  for (const l of BOOT) {
+    for (let i = 0; i <= l.length; i += 3) { pre.textContent = BOOT.slice(0, BOOT.indexOf(l)).join("\n") + (BOOT.indexOf(l) ? "\n" : "") + l.slice(0, i); await new Promise(r => setTimeout(r, 12)); }
+    await new Promise(r => setTimeout(r, 160));
+  }
+  $("btnEntrar").style.visibility = "visible";
+})();
+$("btnEntrar").onclick = () => {
+  $("boot").classList.add("oculta");
+  if (!audio) activarAudio();
+  modo("lab");
+  decir("Sistema PTI listo. Tú apuntas. El robot hace el resto.");
+};
 
-// reloj
+// ---------------- voz del narrador (Web Speech, español)
+let voz = true;
+function decir(t) {
+  if (!voz || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(t); u.lang = "es-ES"; u.rate = 1.02; u.pitch = 0.9;
+  const v = speechSynthesis.getVoices().find(v => v.lang.startsWith("es")); if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+$("bVoz").onclick = () => { voz = !voz; $("bVoz").classList.toggle("on", voz); if (!voz) speechSynthesis.cancel(); };
+$("bVoz").classList.add("on");
+
+// ---------------- titulares
+let tTitular;
+function titular(sup, t, sub, clase = "") {
+  const el = $("titular"); el.className = "ver " + clase;
+  $("tSup").textContent = sup; $("tT").textContent = t; $("tSub").textContent = sub;
+  clearTimeout(tTitular); tTitular = setTimeout(() => el.className = clase, 2600);
+}
+
+// ---------------- estado del robot
 setInterval(() => { $("reloj").textContent = new Date().toLocaleTimeString("es-ES"); }, 500);
-
-// estado del robot (gemelo.py -> /estado)
+let est = {}, prevFase = -1, prevMovs = null, prevVivo = false, tInicio = null, tFin = null, dosisMano = 0;
 async function leer() {
   try { est = await (await fetch("/estado", {cache: "no-store"})).json(); } catch (e) { est = {}; }
   pintar();
@@ -235,45 +417,75 @@ async function leer() {
 setInterval(leer, 200);
 
 function pintar() {
-  const vivo = est.vivo;
-  $("vivo").classList.toggle("on", !!vivo);
+  const vivo = !!est.vivo, f = est.fase ?? -1, movs = est.movimientos ?? 0, M = MODOS[modoActual];
+  $("vivo").classList.toggle("on", vivo);
   $("vivotxt").textContent = vivo ? (est.demo ? "REPRODUCCIÓN" : "EN DIRECTO") : "ESPERANDO ROBOT";
-  const f = est.fase ?? -1;
-  for (let i = 0; i < 4; i++) $("f" + i).classList.toggle("act", i === f);
+  if (vivo && !prevVivo) { titular("ENLACE ESTABLECIDO", "ROBOT EN LÍNEA", "telemetría en directo"); decir("Robot en línea."); }
+  prevVivo = vivo;
+  for (let i = 0; i < 4; i++) {
+    $("f" + i).classList.toggle("act", i === f);
+    $("f" + i).classList.toggle("hecha", f > i && f !== 3 || (f === 3 && i < 3));
+  }
   $("fasetxt").textContent = f >= 0 ? ["APUNTA", "COGE", "TRAZA", "DEJA"][f] : "EN ESPERA";
-  $("narr").textContent = f >= 0 ? NARR[f] : (vivo ? "Brazo en reposo. Celda sellada." : "Esperando señal del robot…");
-  $("movs").textContent = est.movimientos ?? 0;
-  const cont = $("cont");
-  if (est.cogido) { cont.textContent = "EN TRÁNSITO · FUERA DE BLINDAJE"; cont.className = "rojo"; }
-  else if ((est.movimientos ?? 0) > 0) { cont.textContent = "DEPOSITADO EN ZONA DE ANÁLISIS"; cont.className = "ambar"; }
-  else { cont.textContent = "EN ALMACÉN BLINDADO"; cont.className = "verde"; }
-  $("cab").classList.toggle("alerta", !!est.cogido);
-  const r = $("registro");
-  r.innerHTML = (est.registro || []).slice().reverse().map(s => `<div>${s.replace(/</g, "&lt;")}</div>`).join("");
-  // radiación simulada: fondo ~30 CPM; contenedor fuera del blindaje ~2500; recién depositado ~600
-  objetivo = est.cogido ? 2500 : ((est.movimientos ?? 0) > 0 ? 600 : (est.laser ? 45 : 30));
+  $("narr").textContent = f >= 0 ? M.narr[f] : (vivo ? "Brazo en reposo. Celda sellada. Esperando orden del operador." : "Esperando señal del robot");
+
+  if (f !== prevFase && vivo) {
+    if (f === 0) { titular("FASE 1", "OBJETIVO MARCADO", "orden recibida desde fuera de la celda"); decir(M.narr[0]); beep(880); }
+    if (f === 1) { titular("FASE 2", "EXTRACCIÓN", "contenedor saliendo del blindaje", "rojo"); decir(M.narr[1]); beep(660); if (!tInicio || tFin) { tInicio = Date.now(); tFin = null; } }
+    if (f === 2) { titular("FASE 3", "EN TRÁNSITO", "siguiendo el punto del láser", "rojo"); decir(M.narr[2]); beep(660); }
+    if (f === 3) { titular("FASE 4", "DEPÓSITO", "liberando contenedor", "verde"); beep(990); }
+  }
+  prevFase = f;
+  if (prevMovs !== null && movs > prevMovs) { tFin = Date.now(); setTimeout(mostrarResumen, 1800); decir(M.narr[3]); }
+  prevMovs = movs;
+
+  $("movs").textContent = movs;
+  const cont = $("cont"), em = $("estadoMision");
+  if (est.cogido) { cont.textContent = "FUERA DE BLINDAJE · EN TRÁNSITO"; cont.className = "rojo"; em.textContent = "MATERIAL EXPUESTO"; em.className = "rojo"; }
+  else if (movs > 0 && f === 3) { cont.textContent = "DEPOSITADO EN ZONA DE ANÁLISIS"; cont.className = "ambar"; em.textContent = "DEPÓSITO CONFIRMADO"; em.className = "verde"; }
+  else if (movs > 0) { cont.textContent = "EN ZONA DE ANÁLISIS"; cont.className = "ambar"; em.textContent = "CELDA SELLADA"; em.className = "verde"; }
+  else { cont.textContent = "EN ALMACÉN BLINDADO"; cont.className = "verde"; em.textContent = vivo ? "CELDA SELLADA" : "SIN ENLACE"; em.className = vivo ? "verde" : "ambar"; }
+  document.body.classList.toggle("peligro", !!est.cogido);
+  const t = tInicio ? ((tFin || Date.now()) - tInicio) / 1000 : 0;
+  $("tmision").textContent = "T+" + fmt(t);
+  $("registro").innerHTML = (est.registro || []).slice().reverse().map(s => `<div>${s.replace(/</g, "&lt;")}</div>`).join("");
+  objetivo = est.cogido ? 2500 : (movs > 0 && f === 3 ? 600 : (est.laser ? 45 : 30));
 }
 
-// contador Geiger: CPM con ruido de Poisson + clics de audio
-let audio = null;
-$("sonido").onclick = () => {
-  if (!audio) { audio = new (window.AudioContext || window.webkitAudioContext)(); $("sonido").textContent = "🔊 GEIGER ACTIVO"; }
-  else { audio.close(); audio = null; $("sonido").textContent = "🔇 ACTIVAR GEIGER"; }
-};
+function mostrarResumen() {
+  const t = tInicio && tFin ? (tFin - tInicio) / 1000 : 0, p = est.punta_cm;
+  $("rTiempo").textContent = fmt(t) + " min";
+  $("rDestino").textContent = p ? `(${p[0].toFixed(0)}, ${p[1].toFixed(0)}) cm` : "—";
+  $("rEvitada").textContent = $("dosisMano").textContent;
+  $("resSub").textContent = MODOS[modoActual].lote + " · INFORME AUTOMÁTICO · " + new Date().toLocaleTimeString("es-ES");
+  $("resumen").classList.remove("oculta");
+  titular("OPERACIÓN", "COMPLETADA", "0 personas expuestas", "verde");
+}
+function cerrarResumen() { $("resumen").classList.add("oculta"); }
+
+// ---------------- Geiger (simulado) + sonidos
+let audio = null, cpm = 30, objetivo = 30, ultimo = performance.now(), hist = [], geiger = false;
+function activarAudio() { audio = new (window.AudioContext || window.webkitAudioContext)(); }
+$("sonido").onclick = () => { if (!audio) activarAudio(); geiger = !geiger; $("sonido").textContent = geiger ? "🔊 GEIGER" : "🔇 GEIGER"; $("sonido").classList.toggle("on", geiger); };
 function clic() {
+  if (!audio || !geiger) return;
+  const o = audio.createBufferSource(), b = audio.createBuffer(1, 220, audio.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / 18);
+  const g = audio.createGain(); g.gain.value = 0.5; o.buffer = b; o.connect(g).connect(audio.destination); o.start();
+}
+function beep(f) {
   if (!audio) return;
-  const t = audio.currentTime, o = audio.createBufferSource(), b = audio.createBuffer(1, 220, audio.sampleRate);
-  const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / 18);
-  const g = audio.createGain(); g.gain.value = 0.5; o.buffer = b; o.connect(g).connect(audio.destination); o.start(t);
+  const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = f; o.type = "square";
+  g.gain.setValueAtTime(0.06, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.25);
+  o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + 0.26);
 }
 function bucle(ahora) {
-  const dt = (ahora - ultimo) / 1000; ultimo = ahora;
+  const dt = Math.min(0.1, (ahora - ultimo) / 1000); ultimo = ahora;
   cpm += (objetivo - cpm) * Math.min(1, dt * 1.5);
-  const lambda = cpm / 60 * dt;                       // clics esperados en este fotograma
-  let n = 0, L = Math.exp(-Math.min(lambda, 30)), p = 1;
-  do { n++; p *= Math.random(); } while (p > L); n--;   // Poisson
+  const L = Math.exp(-Math.min(cpm / 60 * dt, 30)); let n = 0, p = 1;
+  do { n++; p *= Math.random(); } while (p > L); n--;
   for (let i = 0; i < Math.min(n, 4); i++) setTimeout(clic, Math.random() * dt * 1000);
-  if (est.cogido) dosisMano += dt * 25 / 3600 * 60;   // ilustrativo: 25 µSv/h a mano, tiempo x60 (demo)
+  if (est.cogido) dosisMano += dt * 25 / 60;            // ilustrativo
   bucle.acum = (bucle.acum || 0) + dt;
   if (bucle.acum > 0.25) {
     bucle.acum = 0;
@@ -287,24 +499,17 @@ function bucle(ahora) {
   requestAnimationFrame(bucle);
 }
 requestAnimationFrame(bucle);
-
 function dibujar() {
   const c = $("hist"), x = c.getContext("2d"), W = c.width, H = c.height;
-  x.clearRect(0, 0, W, H);
-  x.strokeStyle = "#1f2a2c"; x.beginPath(); x.moveTo(0, H - 1); x.lineTo(W, H - 1); x.stroke();
-  x.strokeStyle = "#ffb000"; x.lineWidth = 1.5; x.beginPath();
-  hist.forEach((v, i) => {
-    const y = H - (Math.log10(Math.max(v, 10)) - 1) / 3 * (H - 4) - 2, X = i / 119 * W;
-    i ? x.lineTo(X, y) : x.moveTo(X, y);
-  });
+  x.clearRect(0, 0, W, H); x.strokeStyle = "#ffb000"; x.lineWidth = 1.5; x.beginPath();
+  hist.forEach((v, i) => { const y = H - (Math.log10(Math.max(v, 10)) - 1) / 3 * (H - 4) - 2, X = i / 119 * W; i ? x.lineTo(X, y) : x.moveTo(X, y); });
   x.stroke();
 }
 
-// ---------------- panel de control: lanza los comandos en el portátil (gemelo.py)
+// ---------------- panel de control (lanza comandos en el portátil vía gemelo.py)
 async function accion(x, extra = {}) {
-  const q = new URLSearchParams({x, ...extra});
   try {
-    const r = await (await fetch("/accion?" + q, {cache: "no-store"})).json();
+    const r = await (await fetch("/accion?" + new URLSearchParams({x, ...extra}), {cache: "no-store"})).json();
     $("msg").textContent = r.resultado === "ok" ? "" : r.resultado;
   } catch (e) { $("msg").textContent = "Sin conexión con gemelo.py"; }
   proceso();
@@ -312,7 +517,9 @@ async function accion(x, extra = {}) {
 function iniciar() {
   if (!$("seguro").checked) { $("msg").textContent = "Marca primero la casilla de seguridad."; return; }
   accion("probar", {modelo: $("modelo").value, coef: $("coef").value, seg: $("seg").value, seguro: "1"});
-  $("seguro").checked = false; $("btnIniciar").disabled = true;   // confirmar de nuevo en cada intento
+  $("seguro").checked = false; $("btnIniciar").disabled = true;
+  fetch("/tecla?k=reiniciar"); tInicio = null; tFin = null; dosisMano = 0; cerrarResumen();
+  decir(modoActual === "luna" ? "Iniciando secuencia autónoma del rover." : "Iniciando secuencia de traslado.");
 }
 $("seguro").onchange = () => { $("btnIniciar").disabled = !$("seguro").checked; };
 async function proceso() {
@@ -331,11 +538,14 @@ setInterval(proceso, 700);
     $("modelo").innerHTML = ms.map(m => `<option ${m.includes("todo_v1") ? "selected" : ""}>${m}</option>`).join("");
   } catch (e) {}
 })();
+$("teletipo").innerHTML = MODOS.lab.teletipo.map(t => `<b>◆</b>${t}`).join("   ");
 
 document.onkeydown = e => {
   if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
-  const k = {m: "mision", " ": "giro", r: "reiniciar"}[e.key];
-  if (k) { fetch("/tecla?k=" + k); e.preventDefault(); }
+  if (e.key === " ") { fetch("/tecla?k=giro"); e.preventDefault(); }
+  if (e.key === "r") { fetch("/tecla?k=reiniciar"); tInicio = null; tFin = null; dosisMano = 0; }
+  if (e.key === "m") modo(modoActual === "lab" ? "luna" : "lab");
+  if (e.key === "Escape") cerrarResumen();
 };
 </script>
 </body>
