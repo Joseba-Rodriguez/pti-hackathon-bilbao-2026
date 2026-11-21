@@ -118,3 +118,10 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 - Hoy (negro) se suelta donde se apaga el láser: columnas izquierda (≈19) y derecha (≈12) y centro (≈14); la fila lejana casi vacía (4 de 45).
 - El recorrido del láser cubre bien la cartulina, pero hay un **punto caliente falso en el soporte** (borde izquierdo): el filtro marca algo rojo del bote/soporte como láser en muchos fotogramas.
 
+
+### Refuerzo del centro y `todo_v2` (sábado ~16:10)
+- `pti_laser_H_centro`: 28 episodios buenos según `docs/ESCALETA_CENTRO.md`; sueltas donde tocaba (centro 10, casilla 6: 6, fila lejana 9).
+- Mapa de calor con la rejilla ajustada a la cartulina: `docs/img/mapa_calor_v2.png` (la rejilla de los mapas anteriores cubría toda la imagen, no la cartulina).
+- `pti_todo_v2` = `pti_todo_v7_laser` + H = 123 episodios. Subido al Hub (privado; hizo falta crear la etiqueta `v3.0`).
+- `todo_v2` entrenando en la nube **desde `todo_v1`**, 10 000 pasos. `todo_v1` no se toca: solo se cambia si `todo_v2` gana en 10 intentos con los mismos puntos.
+
