@@ -7,10 +7,11 @@ deja ahí. Se añade a `pti_coger_v7` con `--resume` y se afina desde `coger_v7`
 
 ```
           izquierda   centro   derecha
-cerca        1          2         3
+cerca        1          2         3      <- NO se usa (muy cerca del brazo, poco margen para maniobrar)
 medio        4          5         6
 lejos        7          8         9      <- ayer casi vacía: prioridad
 ```
+**Solo las 6 casillas lejanas (4–9).** El láser no entra en la fila 1–3 en ningún episodio.
 Antes de empezar, comprobad con el leader que el brazo llega con el bote a las casillas 7, 8 y 9.
 Si alguna no llega, sus episodios se pasan a la casilla alcanzable más cercana.
 
@@ -28,20 +29,22 @@ Si alguna no llega, sus episodios se pasan a la casilla alcanzable más cercana.
 | Tipo | Nº | Qué hace el láser | Para qué |
 | --- | --- | --- | --- |
 | A. Recta corta | 10 | Se enciende cerca y va en línea recta a una casilla vecina | Lo básico: seguir |
-| B. Recta larga | 10 | Cruza la mesa (1→9, 3→7, 2→8, 4→6…) | Recorridos largos |
+| B. Recta larga | 10 | Cruza la zona (4→6, 7→9, 4→9, 6→7, 9→4…) | Recorridos largos |
 | C. Curva / zigzag / círculo | 8 | Trayectoria curva | Que siga la forma, no un recorrido memorizado |
 | D. Con paradas | 8 | Se mueve, **se para 2 s**, sigue y se apaga | Se mueve *porque* se mueve el punto |
 | E. Cambio de sentido | 6 | Va hacia un lado y de repente vuelve | Reaccionar al punto |
 | F. Salto | 4 | Se apaga 0,5 s y se enciende en otro sitio, que el brazo sigue, y después se apaga | Ir a un punto nuevo |
 | G. Casi sin moverse | 4 | Se enciende en un sitio y se apaga a los 2–3 s | Dejar en un punto quieto |
 
-**Dónde se apaga el láser** (es donde se deja el bote): repartid **5–6 veces en cada casilla**, y en
-**7, 8, 9 y 5 al menos 6**. Hoja para ir marcando:
+**Dónde se apaga el láser** (es donde se deja el bote): **8–9 veces en cada una de las 6 casillas**.
+Hoja para ir marcando:
 
-| Casilla | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Objetivo | 5 | 5 | 5 | 5 | 6 | 5 | 6 | 7 | 6 |
-| Hechos | | | | | | | | | |
+| Casilla | 4 | 5 | 6 | 7 | 8 | 9 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Objetivo | 8 | 8 | 8 | 9 | 9 | 8 |
+| Hechos | | | | | | |
+
+Dentro de cada casilla, variad el punto exacto (no siempre en el centro de la casilla).
 
 Orden: **mezclad los tipos** (no grabéis los 10 de un mismo tipo seguidos), para que el cansancio del
 operador no se convierta en un patrón.
