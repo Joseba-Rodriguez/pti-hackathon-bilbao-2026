@@ -131,3 +131,6 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 - Fallos `There is no status packet` al conectar (servos 6 y 4): servos sanos (0/600 fallos leyendo). `lerobot_laser.py` reintenta 3 veces las escrituras de configuración.
 - **`todo_v3`** en la nube: desde `todo_v1`, `pti_todo_v2` (123 ep.), **25 000 pasos** (~2 épocas). Job `6b01c756efaf5e14f4b5b759`. `todo_v1` sigue siendo el de la demo hasta que v3 gane.
 
+
+- **`todo_v3` terminado** (~18:40): `Josebarv01/act_pti_todo_v3` → `lerobot\outputs
+ube	odo_v3`; carga en el portátil. Pendiente: 10 intentos v1 vs v3 en los mismos puntos.
