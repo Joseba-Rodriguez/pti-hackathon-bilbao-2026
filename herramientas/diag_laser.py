@@ -26,6 +26,8 @@ import lerobot_laser as L  # noqa: E402
 
 def main():
     modo = sys.argv[1] if len(sys.argv) > 1 else "quieto"
+    guardar = len(sys.argv) > 2               # p.ej.  diag_laser.py moviendo blanco  -> guarda el clip
+    clip = []
     cap = cv2.VideoCapture(L.CFG["camara"]["indice"], cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640); cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     if not cap.isOpened():
@@ -39,6 +41,8 @@ def main():
         if not ok:
             continue
         n += 1
+        if guardar:
+            clip.append(im)
         p = L.buscar_laser(im)
         b, g, r = (im[..., i].astype(np.int16) for i in range(3))
         score = np.clip(r - np.maximum(g, b), 0, 255)
@@ -46,6 +50,12 @@ def main():
         rojos.append(int(r[y, x])); picos.append(int(score[y, x]))
         linea += "#" if p else "."
     cap.release()
+    if guardar:
+        carpeta = Path(__file__).resolve().parent.parent / "_copias" / "clips_laser"
+        carpeta.mkdir(parents=True, exist_ok=True)
+        ruta = carpeta / f"{modo}_{sys.argv[2]}_{time.strftime('%H%M%S')}.npz"
+        np.savez_compressed(ruta, frames=np.stack(clip))   # sin perdidas, sin filtro
+        print(f"Clip guardado: {ruta}")
     fps = n / 6
     print(f"{n} fotogramas ({fps:.0f} fps).  Visto en {linea.count('#')} de {n} ({100 * linea.count('#') / max(n, 1):.0f} %)")
     for i in range(0, len(linea), 60):
