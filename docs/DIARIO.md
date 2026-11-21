@@ -96,3 +96,11 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 - Resultado: **3 grupos** (derecha, cerca del robot: ~13; abajo-izquierda: ~13; arriba-centro: ~6). Fila lejana casi vac�a (1) y centro vac�o.
 - Para el modelo 2: repartir los destinos por toda la mesa, sobre todo la fila lejana y el centro.
 
+
+### Entrenamientos en la nube (HF Jobs, $20 de créditos) — sábado 13:50
+- Grabado con **fondo negro** por tipos de movimiento (`docs/PLAN_LASER.md`): 45 episodios buenos en `pti_laser_todo`.
+- Lanzados en paralelo en `a10g-large` ($1,50/h), los dos afinando desde `coger_v7`:
+  - `laser_v1`: solo `pti_laser_todo` (45 ep., negro), 10 000 pasos. Job `6b01935f4fdc5ab3c55d2919`, modelo `Josebarv01/laser_v1_2026-11-21_12-49-24`.
+  - `todo_v1`: `pti_todo_v7_laser` = `coger_v7` + láser (95 ep., blanco + negro), 15 000 pasos. Job `6b0193874fdc5ab3c55d2942`, modelo `Josebarv01/todo_v1_2026-11-21_12-50-08`.
+- Comando: `lerobot-train --job.target=a10g-large --job.timeout=3h --job.detach=true ...` (sube el dataset al Hub como privado).
+
