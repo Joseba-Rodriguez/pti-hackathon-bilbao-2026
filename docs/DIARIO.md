@@ -89,3 +89,10 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 | --- | --- | --- | --- | --- |
 | coger_v2 | 5000 | no | 1/5 | tiembla mucho |
 | coger_v7 | 20000 | sÃ­ | coger ~9/10 | deja siempre en el mismo sitio (no mira el lÃ¡ser); 1 lanzamiento |
+
+### Mapa de calor: dónde se soltó el bote en `pti_coger_v7`
+- ![mapa de calor](img/mapa_calor_sueltas_v7.png)
+- Método: final del tramo «pinza ˜ 20» (bote sujeto) + punta del brazo naranja en la cámara cenital. 35 de 50 episodios fiables.
+- Resultado: **3 grupos** (derecha, cerca del robot: ~13; abajo-izquierda: ~13; arriba-centro: ~6). Fila lejana casi vacía (1) y centro vacío.
+- Para el modelo 2: repartir los destinos por toda la mesa, sobre todo la fila lejana y el centro.
+
