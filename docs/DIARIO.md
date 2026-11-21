@@ -107,3 +107,7 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 - Tras 3 fallos de arranque (versión de LeRobot de la imagen, sin `pip`, comillas) se usa `herramientas\entrenar_nube.ps1`, que instala nuestro commit (0.6.2) en la máquina. A10G: **6,25 pasos/s** (3,5× el portátil).
 - **`laser_v1` terminado** (13:23): 10 000 pasos, loss 0,344 → ~0,16. `Josebarv01/act_pti_laser_v1`, descargado en `lerobot\outputs\nube\laser_v1` y comprobado que carga en el portátil.
 
+- Prueba de `laser_v1` (fondo negro, `-Bloque 10`): **coge y sigue el láser muy bien**, pero **no suelta al apagar el láser**.
+  Hipótesis: en las grabaciones el círculo se corta 0,5–2 s mientras se sigue (el bote/brazo tapa el punto), así que «sin láser» no significa siempre «soltar».
+- **`todo_v1` terminado** (13:40): 15 000 pasos, 95 episodios. `Josebarv01/act_pti_todo_v1`, en `lerobot\outputs\nube\todo_v1`; carga en el portátil.
+
