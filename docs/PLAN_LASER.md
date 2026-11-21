@@ -54,3 +54,14 @@ operador no se convierta en un patrón.
 2. Afinar desde `coger_v7` con todo el dataset (~100 episodios), 10 000 pasos (~2 h).
 3. Probar con `n_action_steps` bajo y sin suavizado fuerte, para que reaccione rápido al punto.
 4. Evaluar: 10 intentos con trayectorias nuevas, apuntando el éxito al seguir y el éxito al dejar.
+
+## Revisión de lo grabado (episodios a QUITAR al juntar; los datasets originales no se tocan)
+
+| Dataset | Episodios | Buenos | Quitar | Motivo |
+| --- | --- | --- | --- | --- |
+| pti_laser_A_recta_corta | 10 | 8 | 0, 1 | 0: 60 s (tope) y láser intermitente; 1: 1,9 s vacío |
+| pti_laser_B_recta_larga | 10 | 10 | — | |
+| pti_laser_C_curva | 8 | 8 | — | |
+| pti_laser_D_paradas | 8 | 8 | — | |
+| pti_laser_E_cambio_sentido | 6 | 2 | 0, 1, 2, 5 | 0: 5,9 s vacío; 1 y 2: 60 s sin láser; 5: no fue bien (decisión del equipo) |
+
