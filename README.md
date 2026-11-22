@@ -55,12 +55,12 @@ flowchart LR
     L([Operador con<br/>puntero láser]) -.-> MESA[(Mesa)]
     MESA --> TOP[Cámara cenital<br/>640×480 · 30 fps]
     MUN[Cámara de muñeca<br/>640×480 · 30 fps] --> ACT
-    TOP --> F["Filtro de láser<br/><code>lerobot_laser.py</code><br/>punto de 2–3 px → círculo de 12 px"]
+    TOP --> F["Filtro de láser<br/>lerobot_laser.py<br/>punto de 2–3 px → círculo de 12 px"]
     F --> ACT["Política ACT<br/>temporal ensembling<br/>en un hilo aparte · 30 Hz"]
     ACT -->|posición objetivo<br/>de 6 articulaciones| SO[SO-101 follower]
     SO -->|articulaciones| UDP{{UDP local}}
     F -->|imagen| UDP
-    UDP --> G["Gemelo digital<br/><code>gemelo.py</code> · MuJoCo"]
+    UDP --> G["Gemelo digital<br/>gemelo.py · MuJoCo"]
     G --> WEB["Cabina web<br/>three.js · :8765"]
 ```
 
