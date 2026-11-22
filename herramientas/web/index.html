@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PTI Hot Cell</title>
+<link rel="stylesheet" href="/web/estilo.css">
+<script type="importmap">
+{ "imports": {
+    "three": "/web/vendor/three/three.module.js",
+    "three/addons/": "/web/vendor/three/addons/"
+} }
+</script>
+</head>
+<body>
+
+<!-- ======================= ESCENA 3D (fondo) ======================= -->
+<div id="vista"></div>
+<div id="cristal" aria-hidden="true"></div>
+<div id="alarma" aria-hidden="true"></div>
+
+<!-- etiquetas que siguen a objetos 3D -->
+<div class="etq3d" id="etqVaso"><span class="pto"></span><div><b>U-235 · #U-0347</b><small id="etqVasoEstado">En almacén blindado</small></div></div>
+<div class="etq3d oper" id="etqOper"><span class="pto"></span><div><b>Operador · cabina</b><small>Fuera de la celda · 0,00 µSv</small></div></div>
+<div class="etq3d laser" id="etqLaser"><span class="pto"></span><div><b>OBJETIVO</b><small id="etqLaserXY">—</small></div></div>
+
+<!-- ======================= ARRANQUE ======================= -->
+<section id="arranque" class="capa">
+  <div class="arr-centro">
+    <svg class="logo grande" viewBox="0 0 100 100" aria-hidden="true"><use href="#trebol"/></svg>
+    <h1>PTI <span>Hot Cell</span></h1>
+    <p class="arr-sub">Manipulación remota de material radiactivo · Celda caliente 03</p>
+    <ol id="arrPasos">
+      <li data-k="0">Enlace con el brazo SO-101 · 6 servos</li>
+      <li data-k="1">Cámara cenital y cámara de muñeca</li>
+      <li data-k="2">Política ACT aprendida por imitación</li>
+      <li data-k="3">Gemelo digital calibrado con 102 sueltas reales</li>
+      <li data-k="4">Celda sellada · presión negativa</li>
+    </ol>
+    <button id="btnEntrar" class="btn primario" disabled>Iniciar sesión de operador</button>
+    <p class="arr-nota">Demostración · radiación simulada · el contenedor real es un vaso vacío</p>
+  </div>
+</section>
+
+<!-- ======================= BARRA SUPERIOR ======================= -->
+<header id="barra" class="vidrio">
+  <div class="marca">
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><use href="#trebol"/></svg>
+    <div>
+      <div class="marca-t">PTI <span>Hot Cell Operations</span></div>
+      <div class="marca-s">Celda caliente 03 · Manipulación remota de uranio</div>
+    </div>
+  </div>
+  <div class="estados">
+    <div class="pastilla" id="pEnlace"><i></i><span>Sin señal</span></div>
+    <div class="pastilla" id="pCelda"><i></i><span>Celda sellada</span></div>
+    <div class="pastilla mono" id="pT"><span>T+00:00</span></div>
+  </div>
+  <div class="acciones">
+    <button class="btn icono on" id="bVoz" title="Narrador (v)"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="ondas" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg><span>Narrador</span></button>
+    <button class="btn icono" id="bGeiger" title="Contador Geiger (g)"><svg viewBox="0 0 24 24"><path d="M3 12h3l2-6 4 12 2-6h7"/></svg><span>Geiger</span></button>
+    <button class="btn icono" id="bControl" title="Panel de control (c)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span>Control</span></button>
+    <div class="reloj mono" id="reloj">--:--:--</div>
+  </div>
+</header>
+
+<!-- ======================= COLUMNA IZQUIERDA ======================= -->
+<aside id="izq" class="columna">
+  <section class="tarjeta vidrio sin-pad" data-panel="camaras">
+    <div class="t-cab pad"><span>Cámaras del puesto</span><b class="vivo-txt" id="camTxt">Real</b></div>
+    <div class="cam"><span class="cam-vacia">Cenital: se ve al lanzar el robot</span><img src="/stream?v=camara" alt="Cámara cenital real del puesto"><div class="cam-retic"></div><span class="cam-sello mono">CENITAL</span></div>
+    <div class="cam"><span class="cam-vacia">Muñeca: se ve al lanzar el robot</span><img src="/stream?v=muneca" alt="Cámara de muñeca real"><span class="cam-sello mono">MUÑECA</span></div>
+  </section>
+
+  <section class="tarjeta vidrio" data-panel="orden">
+    <div class="t-cab"><span>Orden de trabajo</span><b class="mono" id="lote">U-235 · #U-0347</b></div>
+    <p class="mision">Trasladar el contenedor sellado desde el almacén blindado hasta el punto que marque el operador con el láser. Ninguna persona entra en la celda.</p>
+    <div class="dato-fila">
+      <div><small>Operador</small><b>Fuera de la celda</b></div>
+      <div><small>Blindaje</small><b class="mono">1,2 m Pb-eq</b></div>
+    </div>
+    <p class="dato-rot" id="datoRot"></p>
+  </section>
+
+  <section class="tarjeta vidrio" data-panel="protocolo">
+    <div class="t-cab"><span>Protocolo de traslado</span><b id="faseTxt">En espera</b></div>
+    <ol class="pasos" id="pasos">
+      <li><i>1</i><div><b>Apunta</b><small>El operador marca el destino con el láser</small></div></li>
+      <li><i>2</i><div><b>Coge</b><small>Extracción del almacén blindado</small></div></li>
+      <li><i>3</i><div><b>Traslada</b><small>El brazo sigue el punto del láser</small></div></li>
+      <li><i>4</i><div><b>Deja</b><small>Depósito y retirada</small></div></li>
+    </ol>
+  </section>
+
+  <section class="tarjeta vidrio crece" data-panel="registro">
+    <div class="t-cab"><span>Registro de trazabilidad</span><b>Auditable</b></div>
+    <div class="registro mono" id="registro"></div>
+  </section>
+</aside>
+
+<!-- ======================= COLUMNA DERECHA ======================= -->
+<aside id="der" class="columna">
+  <section class="tarjeta vidrio" data-panel="radiacion">
+    <div class="t-cab"><span>Radiación en la celda</span><b>Simulada</b></div>
+    <div class="rad">
+      <div class="rad-num"><b class="mono" id="tasa">0,12</b><span id="tasaU">µSv/h</span></div>
+      <div class="rad-cpm mono"><span id="cpm">30</span> CPM</div>
+    </div>
+    <div class="medidor"><i id="medidor"></i></div>
+    <canvas id="hist" width="600" height="90"></canvas>
+    <div class="dato-fila tres">
+      <div><small>Dosis operador</small><b class="mono verde">0,00 µSv</b></div>
+      <div><small>Si fuera a mano*</small><b class="mono ambar" id="dosisMano">0,0 µSv</b></div>
+      <div><small>Manos en zona</small><b class="mono verde">0</b></div>
+    </div>
+  </section>
+
+  <section class="tarjeta vidrio" data-panel="telemetria">
+    <div class="t-cab"><span>Telemetría del brazo</span><b class="mono" id="lotes">0 lotes</b></div>
+    <div class="telem mono" id="telem"></div>
+  </section>
+</aside>
+
+<!-- ======================= VISTAS 3D ======================= -->
+<div id="vistas" class="vidrio">
+  <button data-v="cabina" class="on">Cabina</button>
+  <button data-v="operador">Operador</button>
+  <button data-v="cenital">Cenital</button>
+  <button data-v="lateral">Lateral</button>
+  <button data-v="pinza">Seguir pinza</button>
+  <button data-v="operario">Operario</button>
+</div>
+<div id="leyenda3d"><b>Gemelo digital</b> · copia las articulaciones reales · calibrado con las grabaciones (error mediano 0,5 cm)</div>
+
+<!-- ======================= NARRADOR ======================= -->
+<div id="subtitulo" class="vidrio"><span class="onda"><i></i><i></i><i></i><i></i></span><p id="subTxt">Esperando señal del robot</p></div>
+
+<!-- ======================= TITULAR DE FASE ======================= -->
+<div id="titular"><small id="tSup"></small><h2 id="tT"></h2><p id="tSub"></p></div>
+
+<!-- ======================= RESUMEN ======================= -->
+<section id="resumen" class="capa oculta">
+  <div class="res-caja vidrio">
+    <div class="res-ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2>Traslado completado</h2>
+    <p class="res-sub" id="resSub">Informe automático</p>
+    <dl>
+      <dt>Duración</dt><dd class="mono" id="rTiempo">—</dd>
+      <dt>Destino (punta del brazo)</dt><dd class="mono" id="rDestino">—</dd>
+      <dt>Dosis recibida por el operador</dt><dd class="mono verde">0,00 µSv</dd>
+      <dt>Exposición evitada (ilustrativa)</dt><dd class="mono ambar" id="rEvitada">—</dd>
+      <dt>Manos humanas en la celda</dt><dd class="mono verde">0</dd>
+      <dt>Órdenes del operador</dt><dd>Un punto láser</dd>
+    </dl>
+    <button class="btn primario" id="btnResumen">Siguiente lote</button>
+  </div>
+</section>
+
+<!-- ======================= PANEL DE CONTROL ======================= -->
+<aside id="ctl" class="vidrio">
+  <div class="ctl-cab"><h3>Panel de control</h3><button class="btn icono solo" id="ctlCerrar" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="ctl-paso">
+    <label>1 · Preparar <small>(cámara libre, sin otro programa usándola)</small></label>
+    <div class="fila">
+      <button class="btn" data-accion="camara_aplicar">Ajustar cámara</button>
+      <button class="btn" data-accion="camara_comprobar">Comprobar cámara</button>
+      <button class="btn" data-accion="puertos">Ver brazos</button>
+    </div>
+  </div>
+  <div class="ctl-paso">
+    <label>2 · Modelo y movimiento</label>
+    <select id="modelo"></select>
+    <div class="fila">
+      <select id="coef">
+        <option value="-0.05" selected>Suave y reactivo (-0.05)</option>
+        <option value="-0.1">Más reactivo (-0.1)</option>
+        <option value="0.01">Muy suave (0.01)</option>
+        <option value="bloque10">Sin suavizado (bloque 10)</option>
+        <option value="async:-0.05">Suave y reactivo a 30 Hz (-0.05, red en paralelo)</option>
+      </select>
+      <label class="seg"><input type="number" id="seg" value="45" min="5" max="300"> s</label>
+    </div>
+  </div>
+  <div class="ctl-paso">
+    <label>3 · Seguridad</label>
+    <label class="seguro"><input type="checkbox" id="seguro"><span>Hay una persona mirando el brazo con la mano en la alimentación del follower.</span></label>
+    <div class="gpu" id="gpuCtl"><span>GPU</span><div class="gpu-b"><i></i></div><b class="mono">—</b></div>
+    <label class="chk-peq"><input type="checkbox" id="ignorarGpu"> Iniciar aunque la GPU esté ocupada (irá lento)</label>
+  </div>
+  <div class="ctl-paso">
+    <button class="btn verde-btn ancho" id="btnIniciar" disabled>Iniciar robot</button>
+    <button class="btn rojo-btn ancho" data-accion="parar">Parar</button>
+    <div id="msg"></div>
+  </div>
+  <div class="ctl-paso">
+    <label>Presentación</label>
+    <div class="fila">
+      <button class="btn" id="btnIntro">Narrar introducción</button>
+      <button class="btn" id="btnReiniciar">Reiniciar registro</button>
+    </div>
+    <button class="btn" id="btnPaneles">Restablecer paneles (p)</button>
+  </div>
+  <div class="cons-cab"><span>Salida del proceso</span><label class="chk-peq"><input type="checkbox" id="verOriginal"> Ver original</label></div>
+  <div id="consola" class="mono"><div class="ln tenue">Sin procesos.</div></div>
+</aside>
+
+<!-- ======================= EJECUCION DEL ROBOT (en pantalla) ======================= -->
+<section id="ejec" class="vidrio" data-panel="ejecucion_abajo">
+  <div class="ej-cab">
+    <span class="ej-luz"></span>
+    <div class="ej-tit"><b id="ejTitulo">Robot</b><small id="ejModelo">—</small></div>
+    <div class="ej-reloj mono" id="ejReloj">—</div>
+    <button id="btnParar" class="btn rojo-btn">Parar</button>
+    <button class="btn icono solo" id="ejCerrar" aria-label="Ocultar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <ol class="ej-etapas" id="ejEtapas">
+    <li><i></i><b>Modelo</b><small>—</small></li>
+    <li><i></i><b>Conexión</b><small>—</small></li>
+    <li><i></i><b>En marcha</b><small>—</small></li>
+    <li><i></i><b>Reposo</b><small>—</small></li>
+    <li><i></i><b>Fin</b><small>—</small></li>
+  </ol>
+  <div class="ej-barra"><i id="ejBarra"></i></div>
+  <div class="ej-pie">
+    <div class="ej-hz" id="ejHz"><span>Velocidad de control</span><b class="mono">—</b></div>
+    <div class="ej-gpu" id="ejGpu"><span>GPU</span><b class="mono">—</b></div>
+  </div>
+  <p class="ej-aviso" id="ejAviso"></p>
+</section>
+<div id="toast" class="vidrio"></div>
+
+<p id="aviso">Demostración · radiación y material simulados · el contenedor real es un vaso vacío · concepto, no producto certificado</p>
+
+<!-- símbolo de radiación (trébol) -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="trebol" viewBox="-50 -50 100 100">
+    <circle r="47" fill="none" stroke="currentColor" stroke-width="4"/>
+    <g fill="currentColor">
+      <path id="aspa" d="M12.12 -7 L34.64 -20 A40 40 0 0 1 34.64 20 L12.12 7 A14 14 0 0 0 12.12 -7 Z" transform="rotate(-90)"/>
+      <path d="M12.12 -7 L34.64 -20 A40 40 0 0 1 34.64 20 L12.12 7 A14 14 0 0 0 12.12 -7 Z" transform="rotate(30)"/>
+      <path d="M12.12 -7 L34.64 -20 A40 40 0 0 1 34.64 20 L12.12 7 A14 14 0 0 0 12.12 -7 Z" transform="rotate(150)"/>
+      <circle r="9"/>
+    </g>
+  </symbol>
+</svg>
+
+<script type="module" src="/web/app.js"></script>
+</body>
+</html>

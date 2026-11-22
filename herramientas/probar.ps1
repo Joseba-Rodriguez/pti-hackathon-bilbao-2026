@@ -11,11 +11,13 @@ param(
     [int]$Segundos = 30,
     [switch]$SinSuavizar,
     [int]$Bloque = 0,    # >0: sin suavizado, re-planifica cada N pasos (p.ej. 10 = mas reactivo para seguir el laser)
-    [string]$Coef = ""   # suavizado con este coeficiente: 0.01 = suave (por defecto); -0.05 = suave pero reacciona antes
+    [string]$Coef = "",  # suavizado con este coeficiente: 0.01 = suave (por defecto); -0.05 = suave pero reacciona antes
+    [switch]$SinAsync    # SIEMPRE 30 Hz: el suavizado va con la red en un hilo aparte. Esto lo desactiva (8-14 Hz)
 )
 
 Set-Location E:\HACKATONLeRobot\lerobot
 $env:HF_HOME = "E:\HACKATONLeRobot\hf_cache"
+if (-not $SinAsync) { $env:PTI_ENSEMBLE_ASYNC = "1" } else { Remove-Item Env:PTI_ENSEMBLE_ASYNC -ErrorAction SilentlyContinue }
 $env:PATH = "E:\miniforge3\envs\ffmpeg8\Library\bin;" + $env:PATH
 
 $puertos = & .\.venv\Scripts\python.exe ..\herramientas\puertos.py
@@ -31,8 +33,7 @@ $args = @(
     "--policy.path=$Modelo",
     "--robot.type=so101_follower", "--robot.port=$follower", "--robot.id=follower_puesto",
     "--robot.cameras={ top: {type: opencv, index_or_path: 2, width: 640, height: 480, fps: 30}, wrist: {type: opencv, index_or_path: 1, width: 640, height: 480, fps: 30} }",
-    "--robot.max_relative_target=10",
-    "--task=$Tarea", "--duration=$Segundos", "--display_data=true"
+    "--fps=30", "--task=$Tarea", "--duration=$Segundos", "--display_data=true"
 )
 if ($Coef) { $args += @("--policy.n_action_steps=1", "--policy.temporal_ensemble_coeff=$Coef") }
 elseif ($Bloque -gt 0) { $args += @("--policy.n_action_steps=$Bloque") }

@@ -14,3 +14,8 @@ __pycache__/
 # notas privadas
 CLAUDE.md
 _copias/
+# videos y capturas personales (el repo es publico)
+/*.mp4
+input/
+_videos/
+pti-lerobot-intro/

@@ -134,3 +134,39 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 
 - **`todo_v3` terminado** (~18:40): `Josebarv01/act_pti_todo_v3` → `lerobot\outputs
 ube	odo_v3`; carga en el portátil. Pendiente: 10 intentos v1 vs v3 en los mismos puntos.
+
+### Análisis de por qué v2/v3 no sueltan donde toca (~20:00)
+- Descartado (comprobado sin mover el brazo): Hz (grabado a 30, rollout a 29,6–29,7), calibración (sin cambios desde el 20-nov 19:55), escena (cartulina ±2 px, mismo brillo), filtro del láser (sin cambios), arquitectura (igual en v1/v2/v3).
+- Grabaciones: tras desaparecer el círculo, el operador tarda **~3 s** en soltar y el brazo se mueve a ciegas (~60° de `shoulder_lift`). Igual en los episodios L y H.
+- Evaluación sin robot sobre 16 episodios grabados: **v3 es el que mejor imita** (error 2,6° frente a 3,6° de v1 en episodios que vieron todos; mejor sitio y momento de soltar).
+- v1 sobre los episodios H (que no vio) falla mucho (error medio del bloque 14° frente a 4,6°): **los modelos no generalizan bien a recorridos nuevos del láser**.
+- Modo 30 Hz en paralelo simulado sobre grabaciones: suelta ~2 fotogramas (0,06 s) más tarde que el modo síncrono. No es la causa.
+- Siguiente: 5 intentos v1 y 5 v3 con el mismo protocolo que en las grabaciones (láser quieto hasta que el cubilete esté encima, apagar y esperar 4 s).
+
+### `v4_all_data` y `v4_saturday_data` (lanzados ~20:34)
+- Los dos **desde cero** (ACT, ResNet-18 de ImageNet), `pti_todo_v2`, 5 vueltas, batch 8, lr 1e-5, chunk 100, sin aumento de imagen, semilla 1000.
+- Reservados para evaluar sin robot (no se entrenan en ninguno): episodios 58, 70, 84 (L) y 99, 106, 117 (H).
+- `v4_all_data`: 117 ep., 91 077 fotogramas, 57 000 pasos, checkpoint cada 11 400. Job `6b01f21e4fdc5ab3c55e2332` → `Josebarv01/act_pti_v4_all_data`.
+- `v4_saturday_data`: sin los 50 de `coger_v7` → 67 ep., 47 191 fotogramas, 29 500 pasos, checkpoint cada 5 900. Job `6b01f2204fdc5ab3c55e2335` → `Josebarv01/act_pti_v4_saturday_data`.
+- Checkpoints subidos al Hub según se guardan (`--save_checkpoint_to_hub=true`). Los dos a ~6,2 pasos/s.
+
+### Modelos uniformes (~22:30)
+- Sueltas por casilla (3×3 sobre la cartulina) medidas con la punta de la pinza al abrir. Mapas en `docs/img/mapa_calor_*.png`.
+- Episodios malos detectados: 91 y 111 (la pinza se cierra sin el bote), 78 (no suelta antes del final). También estaban en v2/v3/v4.
+- `v4_uniforme_36`: 4 por casilla en las 9 casillas, 36 ep., 25 103 fotogramas, 5 vueltas (15 700 pasos). Job `6b020b07efaf5e14f4b66f83`.
+- `v4_uniforme_sin_fila_robot`: sin la fila junto a la base del robot, máx. 6 por casilla (6/6/6 y 6/5/6), 35 ep., 24 628 fotogramas, **8 vueltas** (24 600 pasos), checkpoint cada 2 vueltas. Job `6b020e254fdc5ab3c55e51c9`.
+- Los dos desde cero, sin `coger_v7` (mesa blanca) y sin los 6 reservados.
+- **Corrección:** 91 y 111 NO son malos (el follower sujeta el bote a ~19,5; el operador apretó el leader hasta el fondo). El único descartado es el 78.
+- Grabados 14 episodios de relleno en `pti_laser_I_uniforme` (tipo I de `grabar_laser.ps1`); 3 cayeron en la fila del robot.
+- `v4_uniforme_sin_fila_robot` **cancelado** (~23:00) para dejar solo el de 53.
+- **`v4_uniforme_53`**: `pti_todo_v3_uniforme` (= `pti_todo_v2` + los 14 nuevos, 137 ep.), sin la fila junto al robot, 8–9 por casilla (8/9/9 y 9/9/9), 53 ep., 37 639 fotogramas, desde cero, 6 vueltas (28 200 pasos), checkpoint cada 2 vueltas. Job `6b0215674fdc5ab3c55e5c27`. Mapa: `docs/img/mapa_calor_uniforme_final.png`.
+- `v4_uniforme_36` **descartado** (en el robot se va a un lado; sin robot: encoge los giros, error 11,3° en los reservados). Copia local borrada; sigue en el Hub.
+- **`v4_all_data` funciona muy bien en el robot** (~23:20). Sin robot: correlación 0,98 en los reservados, pero se queda corto hacia el lado del soporte.
+- **`v4_all_data_plus`**: afinado **desde `v4_all_data`** con `pti_todo_v3_uniforme` (todo lo de all_data + los 14 nuevos), sin los 6 reservados, 18 900 pasos (~1,5 vueltas), checkpoint cada 6 300. Job `6b021916efaf5e14f4b68f1c`.
+
+### Domingo de madrugada: follower nuevo (~00:45–02:00)
+- Se rompió el servo de la pinza del follower probando `v4_all_data`. Nos dieron otro brazo (sale en COM9). Calibración vieja guardada en `herramientas/calibracion_puesto/follower_puesto_brazo_roto_viernes_sabado.json`.
+- Calibrado con `calibrar.ps1 follower`. Comparado con el viejo: la cámara de muñeca, recolocada, coincide (pinza a 5 px, 0,1°). La imagen no es el problema.
+- Ajuste fino sin recalibrar (`herramientas/ajustar_calibracion.py`), comprobando con replay del episodio 97 de `pti_todo_v2` y la cámara cenital: `wrist_flex` −3,6° (medido en el tope de reposo), `wrist_roll` −6° (medido por el giro de la imagen de muñeca frente a 60 grabaciones), `shoulder_pan` +1,7° neto (a ojo, tras varios replays). Con eso el replay suelta el cubilete donde el original.
+- Web: cámaras cenital + muñeca arriba a la izquierda (el panel de Control ya no las tapa), tarjeta de ejecución abajo a la derecha. La imagen de muñeca va por UDP 5057 (`lerobot_laser.py` → `gemelo.py`), solo para mostrar.
+- Instalación en otro portátil: `docs/INSTALAR.md`.

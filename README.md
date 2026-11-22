@@ -11,6 +11,8 @@ demostraciones** teleoperadas.
 
 ## Por dónde empezar
 
+**[docs/INSTALAR.md](docs/INSTALAR.md)**: instalar y lanzar la demo en otro portátil (estado final, 22-nov-2026).
+
 **[docs/PLAN.md](docs/PLAN.md)**: el plan paso a paso, con todos los comandos (montar la mesa,
 calibrar, grabar, entrenar, probar y la demo).
 

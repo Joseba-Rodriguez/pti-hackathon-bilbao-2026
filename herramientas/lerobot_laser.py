@@ -245,6 +245,15 @@ class AlGemelo:
             if ok and len(buf) < 60000:
                 self._tx(buf.tobytes(), 5056)
 
+    def muneca(self, bgr: np.ndarray):
+        """Imagen de la camara de muneca para la web (solo se muestra, no toca lo que ve el modelo)."""
+        import time
+        if time.time() - getattr(self, "t_mun", 0.0) > 0.1:       # ~10 imagenes/s
+            self.t_mun = time.time()
+            ok, buf = cv2.imencode(".jpg", cv2.resize(bgr, (480, 360)), [cv2.IMWRITE_JPEG_QUALITY, 70])
+            if ok and len(buf) < 60000:
+                self._tx(buf.tobytes(), 5057)
+
 
 def instalar_filtro():
     from lerobot.cameras.opencv import camera_opencv as co
@@ -260,6 +269,11 @@ def instalar_filtro():
             mapa.enviar(image, laser)
             image = marcar(image, laser)
             gemelo.camara(image, laser)
+        else:                                             # camara de muneca: solo una copia para la web
+            try:
+                gemelo.muneca(image)
+            except Exception:
+                pass
         return original(self, image)
 
     co.OpenCVCamera._postprocess_image = _postprocess_image
@@ -281,6 +295,145 @@ def instalar_filtro():
     except Exception as e:
         print(f"[gemelo] no disponible: {e}")
     print(f"[filtro laser] activo en la camara {indice} (detector {DETECTOR}, circulo {RADIO} px)")
+
+
+class EnsembleEnSegundoPlano:
+    """Suavizado de ACT (temporal ensembling) con la red en un hilo aparte.
+
+    Sin esto, con n_action_steps=1 + temporal_ensemble_coeff cada paso del bucle espera una inferencia
+    completa (RTX 2060, dos camaras 640x480: 45-140 ms segun lo que use la GPU) y el bucle va a 8-14 Hz
+    en vez de 30: el brazo ejecuta a camara lenta y a tirones lo que se le enseno a 30 Hz.
+    Aqui el bucle saca CADA PASO (30 Hz) la siguiente accion de la media ponderada, y el hilo calcula
+    bloques nuevos con la observacion mas reciente en cuanto termina el anterior (uno cada ~3 pasos).
+    Cada bloque nuevo se alinea con el tiempo (se descartan las acciones de los pasos que ya pasaron
+    mientras se calculaba) y se mezcla con los mismos pesos exp(-coef * i) que el ensemble de LeRobot.
+    """
+
+    def __init__(self, policy):
+        import threading
+        import torch
+        self.torch, self.p = torch, policy
+        cs = policy.config.chunk_size
+        self.w = torch.exp(-policy.config.temporal_ensemble_coeff * torch.arange(cs, dtype=torch.float64))
+        self.cs = torch.cumsum(self.w, dim=0)
+        self.lock, self.hay_pedido = threading.Lock(), threading.Event()
+        self.stream = torch.cuda.Stream() if torch.cuda.is_available() else None
+        self.inferencias = 0
+        self.reset()
+        threading.Thread(target=self._bucle, daemon=True, name="act-inferencia").start()
+
+    def reset(self):
+        with self.lock:
+            self.ens = None          # (B, n, A) en CPU: acciones futuras ya mezcladas; ens[:, 0] = paso actual
+            self.cnt = None          # (n,) cuantos bloques se han mezclado en cada accion
+            self.paso = 0            # acciones entregadas desde el reset
+            self.pedido = None       # (batch, paso) observacion mas reciente pendiente de inferir
+            self.ultima = None
+            self.gen = getattr(self, "gen", 0) + 1   # descarta bloques calculados antes del reset
+
+    def _inferir(self, batch):
+        torch = self.torch
+        with torch.inference_mode():
+            if self.stream is None:
+                return self.p.predict_action_chunk(batch).detach().to("cpu", torch.float64)
+            # flujo CUDA propio: el bucle de control no espera a la red cuando copia tensores pequenos
+            self.stream.wait_stream(torch.cuda.default_stream())
+            with torch.cuda.stream(self.stream):
+                for v in batch.values():
+                    if isinstance(v, torch.Tensor) and v.is_cuda:
+                        v.record_stream(self.stream)
+                return self.p.predict_action_chunk(batch).detach().to("cpu", torch.float64)
+
+    def _mezclar(self, bloque, retraso: int):
+        torch = self.torch
+        bloque = bloque[:, retraso:]                       # acciones de pasos que ya se ejecutaron: fuera
+        if bloque.shape[1] == 0:
+            return
+        if self.ens is None or self.ens.shape[1] == 0:
+            self.ens, self.cnt = bloque.clone(), torch.ones(bloque.shape[1], dtype=torch.long)
+            return
+        # sin operaciones "in place": los tensores pueden venir de inference_mode (otro hilo)
+        n = min(self.ens.shape[1], bloque.shape[1])
+        c = self.cnt[:n].clamp(max=len(self.w) - 1)
+        cs_prev, cs_new = self.cs[c - 1][None, :, None], self.cs[c][None, :, None]
+        mezcla = (self.ens[:, :n] * cs_prev + bloque[:, :n] * self.w[c][None, :, None]) / cs_new
+        # lo que sobra por detras: o acciones viejas sin bloque nuevo, o acciones nuevas sin pasado
+        self.ens = torch.cat([mezcla, self.ens[:, n:], bloque[:, n:]], dim=1)
+        self.cnt = torch.cat([c + 1, self.cnt[n:], torch.ones(bloque.shape[1] - n, dtype=torch.long)])
+
+    def _bucle(self):
+        while True:
+            self.hay_pedido.wait()
+            with self.lock:
+                pedido, self.pedido, gen = self.pedido, None, self.gen
+                self.hay_pedido.clear()
+            if pedido is None:
+                continue
+            batch, paso0 = pedido
+            try:
+                bloque = self._inferir(batch)
+                with self.lock:
+                    if gen == self.gen:
+                        self._mezclar(bloque, self.paso - paso0)
+                        self.inferencias += 1
+                        self.fallos = 0
+            except Exception as e:                          # el hilo no muere: se reintenta con la siguiente
+                self.fallos = getattr(self, "fallos", 0) + 1
+                print(f"[ensemble async] fallo de inferencia ({self.fallos}): {e!r}")
+
+    def select_action(self, batch):
+        torch = self.torch
+        if getattr(self, "fallos", 0) >= 10:                # la red no responde: parar el rollout, no seguir a ciegas
+            raise RuntimeError("[ensemble async] 10 inferencias seguidas fallidas")
+        disp = next(v.device for v in batch.values() if isinstance(v, torch.Tensor))
+        with self.lock:
+            vacio = self.ens is None or self.ens.shape[1] == 0
+            primera = vacio and self.ultima is None
+        if primera:                                         # primer paso: esperar al primer bloque
+            bloque = self._inferir(batch)
+            with self.lock:
+                self._mezclar(bloque, 0)
+                self.inferencias += 1
+        with self.lock:
+            paso0 = self.paso
+            if self.ens is not None and self.ens.shape[1] > 0:
+                self.ultima = self.ens[:, 0].clone()
+                self.ens, self.cnt = self.ens[:, 1:], self.cnt[1:]
+            # (si se agotaran las 100 acciones, se repite la ultima hasta que llegue un bloque)
+            self.paso += 1
+            self.pedido = (batch, paso0)                    # siempre la observacion mas nueva
+            self.hay_pedido.set()
+            accion = self.ultima
+        return accion.to(device=disp, dtype=torch.float32)
+
+
+def instalar_ensemble_async():
+    """Solo si PTI_ENSEMBLE_ASYNC=1 y la politica usa temporal_ensemble_coeff (suavizado)."""
+    from lerobot.policies.act.modeling_act import ACTPolicy
+
+    sel_original, reset_original = ACTPolicy.select_action, ACTPolicy.reset
+
+    def _motor(self):
+        if self.config.temporal_ensemble_coeff is None:
+            return None
+        if getattr(self, "_pti_async", None) is None:
+            self._pti_async = EnsembleEnSegundoPlano(self)
+            print(f"[ensemble async] activo: coef {self.config.temporal_ensemble_coeff}, la red en segundo plano")
+        return self._pti_async
+
+    def select_action(self, batch):
+        m = _motor(self)
+        if m is None:
+            return sel_original(self, batch)
+        self.eval()
+        return m.select_action(batch)
+
+    def reset(self):
+        reset_original(self)
+        if getattr(self, "_pti_async", None) is not None:
+            self._pti_async.reset()
+
+    ACTPolicy.select_action, ACTPolicy.reset = select_action, reset
 
 
 def aplicar_exposicion():
@@ -331,6 +484,9 @@ def main():
         print(f"[reintentos] no aplicados: {e}")
     aplicar_exposicion()
     instalar_filtro()
+    import os
+    if modo == "rollout" and os.environ.get("PTI_ENSEMBLE_ASYNC") == "1":
+        instalar_ensemble_async()
     sys.argv = [f"lerobot-{modo}"] + resto
     if modo == "record":
         from lerobot.scripts.lerobot_record import main as m

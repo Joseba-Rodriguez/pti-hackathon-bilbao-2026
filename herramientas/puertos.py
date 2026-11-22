@@ -26,7 +26,10 @@ def tension(port: str) -> float | None:
     except Exception:
         return None
     finally:
-        ph.closePort()
+        try:                       # si el puerto no llego a abrirse (ocupado, otro aparato), no hay nada que cerrar
+            ph.closePort()
+        except Exception:
+            pass
 
 
 brazos = {}

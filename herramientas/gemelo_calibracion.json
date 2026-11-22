@@ -1,0 +1,70 @@
+{
+ "_ayuda": "Calibracion del gemelo digital sacada de las grabaciones reales (herramientas/calibrar_gemelo.py). La usa herramientas/gemelo.py.",
+ "articulaciones": {
+  "_ayuda": "angulo MuJoCo = centro del rango del modelo + signo * grados reales. 0 grados reales = pose media de la calibracion de LeRobot.",
+  "signos": {
+   "shoulder_pan": -1,
+   "shoulder_lift": 1,
+   "elbow_flex": 1,
+   "wrist_flex": 1,
+   "wrist_roll": 1
+  },
+  "desfases_grados": {
+   "wrist_roll": -90
+  },
+  "evidencia_desfase": "Con desfase 0, en 40 agarres de pti_laser_todo los dedos quedaban uno encima del otro (6,0 cm en vertical, 1,3 cm en horizontal): el gemelo cogia de arriba a abajo. Con -90 quedan de lado (0,4 cm vertical, 6,1 cm horizontal), como el brazo real.",
+  "evidencia": "wrist_flex era -1 y metia la pinza 4 cm bajo el suelo al coger. Con +1: en reposo la camara de muneca ve el techo (como en el video), y en 19 000 fotogramas de pti_todo_v2 la punta nunca baja de 1,8 cm (p5 = 3,3 cm)."
+ },
+ "camara_a_robot": {
+  "_ayuda": "Homografia pixel de la camara cenital (640x480) -> (x, y) en cm del robot (base en el origen, x hacia delante).",
+  "H": [
+   [
+    -0.01360825372307768,
+    0.1515908420644346,
+    12.840352034939222
+   ],
+   [
+    0.09466608833003969,
+    0.007668681337748931,
+    -23.565595183052263
+   ],
+   [
+    -0.0002553697569266242,
+    0.0006898384202788106,
+    1.0
+   ]
+  ],
+  "evidencia": "102 sueltas grabadas (laser A-E, H): posicion del vaso en la imagen frente a la punta del brazo al soltar; 90 coherentes, error mediano 0.5 cm.",
+  "cuidado": "Vale mientras la camara no se mueva respecto al robot (herramientas/comprobar_camara.py)."
+ },
+ "escena": {
+  "cartulina_cm": [
+   [
+    18.8,
+    22.0
+   ],
+   [
+    53.0,
+    24.1
+   ],
+   [
+    54.4,
+    -12.0
+   ],
+   [
+    19.4,
+    -13.5
+   ]
+  ],
+  "soporte_cm": [
+   30.0,
+   -19.0
+  ],
+  "altura_agarre_cm": 4.5,
+  "vaso_mm": {
+   "diametro": 41,
+   "alto": 55
+  },
+  "evidencia": "Soporte = mediana de la punta al coger en 45 episodios de pti_laser_todo (dispersion 0,4 cm)."
+ }
+}

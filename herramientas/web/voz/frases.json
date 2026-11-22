@@ -1,0 +1,17 @@
+{
+ "voz": "es-ES-AlvaroNeural",
+ "frases": {
+  "arranque": "Sistema PTI en línea. Celda caliente tres, sellada y en depresión. Bienvenido, operador.",
+  "enlace": "Enlace con el brazo establecido. Telemetría en directo.",
+  "enlace_perdido": "Atención: se ha perdido la telemetría del brazo.",
+  "fase0": "El operador marca el destino con el láser, desde fuera de la celda.",
+  "fase1": "Extrayendo el contenedor de uranio del almacén blindado. La radiación en la celda aumenta.",
+  "fase2": "Contenedor en tránsito. El brazo sigue el punto del láser.",
+  "fase3": "Contenedor depositado. Ninguna persona ha entrado en la celda.",
+  "resumen": "Operación completada. Dosis recibida por el operador: cero.",
+  "iniciar": "Iniciando secuencia de traslado. Mantenga la mano cerca de la alimentación del brazo.",
+  "parar": "Parada solicitada. El brazo se detiene.",
+  "reposo": "Brazo en reposo. Celda sellada. Esperando orden del operador.",
+  "intro": "En las celdas calientes, el material radiactivo se manipula detrás de un metro de blindaje. Hoy, el operador solo tiene que apuntar con un láser. El robot, entrenado con demostraciones humanas, hace el resto."
+ }
+}
