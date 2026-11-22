@@ -10,6 +10,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Operario } from './operario.js';
+import { Astronauta } from './astronauta.js';
 
 const R = (x, y, z) => new THREE.Vector3(x, z, -y);          // marco robot (z arriba) -> mundo Three (y arriba)
 const URANIO = 0xb8ff2e;
@@ -132,6 +133,84 @@ function contenedor(r, h) {
   return g;
 }
 
+// ------------------------------------------------------------------ escenario lunar: piezas y texturas
+// roca irregular (icosaedro deformado con ruido suave)
+function rocaGeo(r, detalle = 2, sx = 1, sy = 1, sz = 0.7) {
+  const geo = new THREE.IcosahedronGeometry(1, detalle), p = geo.attributes.position, v = new THREE.Vector3();
+  const f = [Math.random() * 9, Math.random() * 9, Math.random() * 9];
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    const n = 1 + 0.18 * Math.sin(v.x * 3.1 + f[0]) * Math.sin(v.y * 2.7 + f[1]) + 0.1 * Math.sin(v.z * 5.3 + f[2]) + 0.05 * Math.sin((v.x + v.y) * 9);
+    p.setXYZ(i, v.x * n * r * sx, v.y * n * r * sy, v.z * n * r * sz);
+  }
+  geo.computeVertexNormals(); return geo;
+}
+// la muestra de mineral (mismo tamano que el vaso real): roca oscura con cristales que brillan
+function mineral(r, h) {
+  const g = new THREE.Group();
+  const roca = new THREE.Mesh(rocaGeo(1, 3, r * 1.15, r * 1.05, h / 2), new THREE.MeshStandardMaterial({ color: 0x3d3a37, roughness: 0.85, metalness: 0.15, flatShading: true }));
+  roca.castShadow = roca.receiveShadow = true; g.add(roca);
+  const cristal = new THREE.MeshStandardMaterial({ color: 0x0c2a3a, emissive: 0x38e1ff, emissiveIntensity: 1.3, roughness: 0.15, metalness: 0.1, flatShading: true });
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9 * Math.PI * 2 + Math.random() * 0.4, el = (Math.random() - 0.3) * 0.9;
+    const c = new THREE.Mesh(new THREE.OctahedronGeometry(1, 0), cristal);
+    const L = r * (0.35 + Math.random() * 0.35);
+    c.scale.set(L * 0.35, L, L * 0.35);
+    const dir = new THREE.Vector3(Math.cos(a) * Math.cos(el), Math.sin(a) * Math.cos(el), Math.sin(el) * 1.6).normalize();
+    c.position.set(dir.x * r * 0.95, dir.y * r * 0.9, dir.z * h * 0.42);
+    c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+    g.add(c);
+  }
+  const luz = new THREE.PointLight(0x38e1ff, 0.05, 0.25, 2); g.add(luz);
+  g.userData = { cristal };
+  return g;
+}
+const texTierra = () => lienzo(1024, 512, (ctx, w, h) => {
+  ctx.fillStyle = '#1d4f9a'; ctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 26; i++) {                                // continentes inventados
+    const x = Math.random() * w, y = h * (0.2 + Math.random() * 0.6), rr = 30 + Math.random() * 90;
+    ctx.fillStyle = Math.random() < 0.6 ? '#4f7a3a' : '#9a7f52';
+    ctx.beginPath();
+    for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2, q = rr * (0.6 + Math.random() * 0.5); ctx.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q * 0.7); }
+    ctx.fill();
+  }
+  ctx.fillStyle = '#f2f6fa'; ctx.fillRect(0, 0, w, h * 0.07); ctx.fillRect(0, h * 0.93, w, h * 0.07);
+  for (let i = 0; i < 160; i++) {                               // nubes
+    ctx.fillStyle = `rgba(255,255,255,${0.25 + Math.random() * 0.5})`;
+    const x = Math.random() * w, y = Math.random() * h;
+    ctx.beginPath(); ctx.ellipse(x, y, 20 + Math.random() * 70, 4 + Math.random() * 10, Math.random() * 0.5, 0, 7); ctx.fill();
+  }
+});
+const texCubierta = () => lienzo(512, 512, (ctx, w, h) => {
+  ruido(ctx, w, h, '#b9bdc1', 14, 20);
+  ctx.strokeStyle = 'rgba(40,44,48,.35)'; ctx.lineWidth = 2;
+  for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(i * w / 4, 0); ctx.lineTo(i * w / 4, h); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, i * h / 4); ctx.lineTo(w, i * h / 4); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(30,32,36,.5)';
+  for (let i = 0; i <= 8; i++) for (let j = 0; j <= 8; j++) if (i % 2 === 0 || j % 2 === 0) { ctx.beginPath(); ctx.arc(i * w / 8, j * h / 8, 2.2, 0, 7); ctx.fill(); }
+});
+const texOro = () => lienzo(512, 512, (ctx, w, h) => {      // manta aislante arrugada
+  ctx.fillStyle = '#c9952f'; ctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 900; i++) {
+    const x = Math.random() * w, y = Math.random() * h, l = 10 + Math.random() * 50, a = Math.random() * Math.PI;
+    ctx.strokeStyle = Math.random() < 0.5 ? `rgba(255,230,150,${Math.random() * 0.35})` : `rgba(90,55,10,${Math.random() * 0.3})`;
+    ctx.lineWidth = 1 + Math.random() * 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); ctx.stroke();
+  }
+});
+const texSolar = () => lienzo(512, 512, (ctx, w, h) => {
+  ctx.fillStyle = '#c8ccd0'; ctx.fillRect(0, 0, w, h);
+  const n = 8, m = 6, cw = (w - 20) / n, ch = (h - 20) / m;
+  for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) {
+    const gr = ctx.createLinearGradient(0, 10 + j * ch, 0, 10 + (j + 1) * ch); gr.addColorStop(0, '#1b2f5e'); gr.addColorStop(1, '#0d1a38');
+    ctx.fillStyle = gr; ctx.fillRect(10 + i * cw + 2, 10 + j * ch + 2, cw - 4, ch - 4);
+  }
+});
+const texBandejaMuestras = () => lienzo(512, 512, (ctx, w, h) => {   // rejilla discreta, sin rotulos
+  ruido(ctx, w, h, '#5d6166', 12, 10);
+  ctx.strokeStyle = 'rgba(20,22,25,.25)'; ctx.lineWidth = 2;
+  for (let i = 1; i < 6; i++) { ctx.beginPath(); ctx.moveTo(i * w / 6, 8); ctx.lineTo(i * w / 6, h - 8); ctx.stroke(); ctx.beginPath(); ctx.moveTo(8, i * h / 6); ctx.lineTo(w - 8, i * h / 6); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(242,183,5,.7)'; ctx.lineWidth = 8; ctx.strokeRect(4, 4, w - 8, h - 8);
+});
+
 // ------------------------------------------------------------------ la celda
 export class Celda {
   constructor(div) {
@@ -170,6 +249,11 @@ export class Celda {
     this.peligro = 0;               // 0..1 suavizado
     this.t = 0;
     this._luces(); this._sala();
+    // todo lo creado hasta aqui es el laboratorio; el escenario lunar (secundario) va aparte
+    this._lab = [...s.children.filter((o) => o !== this.raiz), ...this.raiz.children];
+    this._ambLab = { fondo: s.background, niebla: s.fog, amb: s.environmentIntensity };
+    this.figura = this.operario; this.escenarioActual = 'lab';
+    this._luna();
     this.vista('cabina', true);
     addEventListener('resize', () => this.redimensionar()); this.redimensionar();
   }
@@ -277,6 +361,11 @@ export class Celda {
     // el contenedor
     this.vaso = contenedor(esc.vaso.r, esc.vaso.h);
     this.vaso.position.set(sx, sy, esc.vaso.h / 2); this.raiz.add(this.vaso);
+    // en la Luna el mismo objeto es una roca con cristales; lo demas del laboratorio se oculta
+    this._vasoLab = [...this.vaso.children];
+    this.mineral = mineral(esc.vaso.r, esc.vaso.h); this.mineral.visible = false; this.vaso.add(this.mineral);
+    this._lab.push(this.bandeja.g, banda);
+    this.escenario(this.escenarioActual);
     // laser: punto, halo, onda y haz desde el puntero del operador
     const rojo = texResplandor('rgba(255,40,20,1)');
     this.laser = new THREE.Group(); this.laser.visible = false; this.raiz.add(this.laser);
@@ -462,7 +551,7 @@ export class Celda {
         if (!this.laser.visible) this.laserPos.copy(obj); else this.laserPos.lerp(obj, 1 - Math.exp(-dt * 20));
         this.laser.position.copy(this.laserPos);
         const s = (this.t * 1.4) % 1; this.onda.scale.setScalar(1 + s * 2.2); this.onda.material.opacity = 0.8 * (1 - s);
-        const a = this.operario ? this.operario.emisor(this.raiz) : new THREE.Vector3(...EMISOR_LASER), b = this.laserPos.clone(), d = b.clone().sub(a);
+        const a = this.figura ? this.figura.emisor(this.raiz) : new THREE.Vector3(...EMISOR_LASER), b = this.laserPos.clone(), d = b.clone().sub(a);
         this.haz.position.copy(a).addScaledVector(d, 0.5);
         this.haz.scale.set(1, d.length(), 1);
         this.haz.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
@@ -485,7 +574,8 @@ export class Celda {
       u.nucleo.emissiveIntensity = 1.5 + this.peligro * 1.6 + Math.sin(this.t * 3) * 0.25;
       u.luz.intensity = 0.02 + this.peligro * 0.12;
     }
-    if (this.operario) this.operario.actualizar(dt, est.laser_m && this.laser ? this.laserPos.clone() : null, this.raiz, this.peligro);
+    if (this.figura) this.figura.actualizar(dt, est.laser_m && this.laser ? this.laserPos.clone() : null, this.raiz, this.peligro);
+    if (this.mineral && this.mineral.visible) this.mineral.userData.cristal.emissiveIntensity = 1.2 + this.peligro + Math.sin(this.t * 2.2) * 0.3;
     if (this.pantallas) this.pantallas.forEach((m, i) => (m.material.emissiveIntensity = 0.9 + 0.15 * Math.sin(this.t * 3 + i) + this.peligro * 0.6 * (Math.sin(this.t * 10) > 0 ? 1 : 0)));
     this.luzClave.color.setRGB(0.95 + 0.05 * this.peligro, 0.96 - 0.12 * this.peligro, 1 - 0.25 * this.peligro);
     // camara
@@ -523,7 +613,163 @@ export class Celda {
   }
 
   posOperario() {             // cabeza del operario en marco robot
-    return this.operario ? this.raiz.worldToLocal(this.operario.cabeza.getWorldPosition(new THREE.Vector3())) : null;
+    return this.figura ? this.raiz.worldToLocal(this.figura.cabeza.getWorldPosition(new THREE.Vector3())) : null;
+  }
+
+  // Cambia de escenario: 'lab' (celda caliente, el principal) o 'luna' (rover + astronauta, secundario).
+  // El brazo, el laser y el objeto que se mueve son los mismos; solo cambia lo que los rodea.
+  escenario(nombre) {
+    const luna = nombre === 'luna';
+    this.escenarioActual = luna ? 'luna' : 'lab';
+    this._lab.forEach((o) => (o.visible = !luna));
+    this.lunaG.visible = luna;
+    if (this._vasoLab) { this._vasoLab.forEach((o) => (o.visible = !luna)); this.mineral.visible = luna; }
+    const s = this.scene;
+    s.background = luna ? new THREE.Color(0x000000) : this._ambLab.fondo;
+    s.fog = luna ? this.nieblaLuna : this._ambLab.niebla;
+    s.environmentIntensity = luna ? 0.1 : this._ambLab.amb;
+    this.figura = luna ? this.astronauta : this.operario;
+    this.controles.maxDistance = luna ? 5 : 3.2;
+    return this.escenarioActual;
+  }
+
+  // ---------------------------------------------------------------- escenario lunar (secundario)
+  // Rover con el brazo encima, regolito con crateres y rocas, cielo negro con estrellas y la Tierra,
+  // sol rasante con sombras duras y un astronauta que marca con el laser el mineral a recoger.
+  _luna() {
+    const g = this.lunaG = new THREE.Group(); g.visible = false; this.raiz.add(g);
+    this.nieblaLuna = new THREE.Fog(0x000000, 9, 24);
+    const SZ = SUELO_Z;
+    // luz: sol rasante (sombras duras), luz de la Tierra muy tenue y un relleno frio
+    const sol = new THREE.DirectionalLight(0xfff6e8, 3.6);
+    sol.position.set(-1.6, -2.6, 2.0); sol.target.position.set(0.6, -0.2, SZ);
+    sol.castShadow = true; sol.shadow.mapSize.set(2048, 2048); sol.shadow.bias = -0.0004; sol.shadow.normalBias = 0.02;
+    Object.assign(sol.shadow.camera, { left: -2.6, right: 2.6, top: 2.6, bottom: -2.6, near: 0.5, far: 9 });
+    g.add(sol, sol.target);
+    g.add(new THREE.HemisphereLight(0x9db8ff, 0x1a1a1a, 0.22));
+    const relleno = new THREE.DirectionalLight(0x8fa8ff, 0.35); relleno.position.set(2, 2, 1); g.add(relleno);
+
+    // regolito: malla con crateres y ondulaciones; zona llana alrededor del rover y del astronauta
+    const N = 240, T = 40, geo = new THREE.PlaneGeometry(T, T, N, N), pos = geo.attributes.position;
+    const crateres = [];
+    for (let i = 0; i < 70; i++) {
+      const r = 0.15 + Math.random() ** 2 * 2.2, d = 1.6 + Math.random() * 16, a = Math.random() * Math.PI * 2;
+      crateres.push([Math.cos(a) * d + 0.6, Math.sin(a) * d, r]);
+    }
+    const colores = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i);
+      let z = 0.05 * Math.sin(x * 0.7 + 1.3) * Math.cos(y * 0.55) + 0.025 * Math.sin(x * 2.3 + y * 1.7) + 0.008 * Math.sin(x * 9.1) * Math.sin(y * 7.3);
+      for (const [cx, cy, r] of crateres) {
+        const d = Math.hypot(x - cx, y - cy) / r;
+        if (d < 1.35) z += d < 1 ? -0.22 * r * (1 - d * d) : 0.06 * r * Math.sin((d - 1) / 0.35 * Math.PI);
+      }
+      const lejos = Math.hypot(x - 0.6, y + 0.2);
+      z *= Math.min(1, Math.max(0, (lejos - 1.6) / 1.6));            // llano junto al rover
+      z += Math.max(0, lejos - 9) * 0.08 * (1 + Math.sin(Math.atan2(y, x) * 5));   // colinas al fondo
+      pos.setZ(i, z);
+      const c = 0.42 + (Math.random() - 0.5) * 0.06 + z * 0.4;
+      colores.set([c, c * 0.985, c * 0.96], i * 3);
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(colores, 3));
+    geo.computeVertexNormals();
+    const grano = lienzo(512, 512, (ctx, w, h) => ruido(ctx, w, h, '#8a8986', 60, 120)); grano.wrapS = grano.wrapT = THREE.RepeatWrapping; grano.repeat.set(60, 60);
+    const suelo = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: grano, vertexColors: true, roughness: 1, metalness: 0 }));
+    suelo.position.set(0.6, 0, SZ); suelo.receiveShadow = true; g.add(suelo);
+    // rocas sueltas
+    const mroca = new THREE.MeshStandardMaterial({ color: 0x6c6a66, roughness: 0.95, flatShading: true });
+    for (let i = 0; i < 90; i++) {
+      const a = Math.random() * Math.PI * 2, d = 1.0 + Math.random() * 7, x = 0.6 + Math.cos(a) * d, y = Math.sin(a) * d;
+      if (Math.hypot(x - OPERARIO[0], y - OPERARIO[1]) < 0.5 || (x > -0.5 && x < 1.0 && Math.abs(y) < 0.8)) continue;
+      const r = 0.02 + Math.random() ** 3 * 0.22, roca = new THREE.Mesh(rocaGeo(r, 1), mroca);
+      roca.position.set(x, y, SZ + r * 0.25); roca.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+      roca.castShadow = roca.receiveShadow = true; g.add(roca);
+    }
+    // cielo: estrellas, la Tierra y el disco del sol
+    const P = 2600, est = new Float32Array(P * 3);
+    for (let i = 0; i < P; i++) {
+      const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+      est.set([Math.cos(th) * s * 26, Math.sin(th) * s * 26, Math.abs(u) * 26 - 1], i * 3);
+    }
+    const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.BufferAttribute(est, 3));
+    g.add(new THREE.Points(ge, new THREE.PointsMaterial({ color: 0xffffff, size: 1.4, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.85 })));
+    const tierra = new THREE.Mesh(new THREE.SphereGeometry(1.1, 64, 48), new THREE.MeshStandardMaterial({ map: texTierra(), roughness: 0.6, fog: false }));
+    tierra.position.set(-14, 9, 9); tierra.rotation.set(0.4, 0.2, 0); g.add(tierra);
+    const atm = new THREE.Sprite(new THREE.SpriteMaterial({ map: texResplandor('rgba(110,170,255,1)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.45, fog: false }));
+    atm.position.copy(tierra.position); atm.scale.set(3.4, 3.4, 1); g.add(atm);
+    const disco = new THREE.Sprite(new THREE.SpriteMaterial({ map: texResplandor('rgba(255,250,235,1)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
+    disco.position.set(-1.6 * 6, -2.6 * 6, 2.0 * 6); disco.scale.set(2.2, 2.2, 1); g.add(disco);
+
+    this._rover(g);
+    // astronauta donde estaba el operario (asi las vistas de camara siguen valiendo)
+    this.astronauta = new Astronauta('AITOR ETXALAR');
+    this.astronauta.grupo.position.set(OPERARIO[0], OPERARIO[1], SZ);
+    this.astronauta.grupo.rotation.z = -Math.PI / 2;
+    g.add(this.astronauta.grupo);
+  }
+
+  // Rover de seis ruedas con suspension, mastil de camaras, antena y panel solar. La cubierta
+  // queda a la altura de la mesa (z = 0): el brazo va anclado encima y la bandeja de muestras
+  // ocupa el sitio de la zona de trabajo real.
+  _rover(g) {
+    const SZ = SUELO_Z;
+    const caja = (lx, ly, lz, x, y, z, m) => { const b = new THREE.Mesh(new THREE.BoxGeometry(lx, ly, lz), m); b.position.set(x, y, z); b.castShadow = b.receiveShadow = true; g.add(b); return b; };
+    const alu = new THREE.MeshStandardMaterial({ map: texCubierta(), color: 0xd6d8da, metalness: 0.7, roughness: 0.42 });
+    const oro = new THREE.MeshStandardMaterial({ map: texOro(), color: 0xffffff, metalness: 1, roughness: 0.32 });
+    const negro = new THREE.MeshStandardMaterial({ color: 0x1d2024, metalness: 0.5, roughness: 0.55 });
+    const metal = new THREE.MeshStandardMaterial({ color: 0x9aa1a8, metalness: 0.9, roughness: 0.35 });
+    caja(1.0, 0.76, 0.05, 0.2, 0, -0.025, alu);                                // cubierta
+    caja(0.92, 0.66, 0.24, 0.2, 0, -0.17, oro);                                // cuerpo con aislante dorado
+    caja(0.6, 0.5, 0.004, 0.37, 0.05, 0.0005, new THREE.MeshStandardMaterial({ map: texBandejaMuestras(), metalness: 0.6, roughness: 0.6 }));
+    // suspension y ruedas
+    const RW = 0.15, ZW = SZ + RW, ruedas = [];
+    const barra = (a, b, r = 0.016) => {
+      const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A);
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, d.length(), 12), metal);
+      m.position.copy(A).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
+      m.castShadow = true; g.add(m);
+    };
+    for (const sy of [-1, 1]) {
+      const yb = sy * 0.36, yw = sy * 0.49;
+      barra([0.2, yb, -0.2], [0.2, sy * 0.42, -0.2], 0.03);                    // eje del balancin
+      barra([0.2, sy * 0.42, -0.2], [-0.22, sy * 0.42, ZW + 0.02]);
+      barra([0.2, sy * 0.42, -0.2], [0.42, sy * 0.42, -0.32]);
+      barra([0.42, sy * 0.42, -0.32], [0.2, sy * 0.42, ZW + 0.02]);
+      barra([0.42, sy * 0.42, -0.32], [0.64, sy * 0.42, ZW + 0.02]);
+      for (const x of [-0.22, 0.2, 0.64]) {
+        const rueda = new THREE.Group(); rueda.position.set(x, yw, ZW); g.add(rueda); ruedas.push(rueda);
+        const llanta = new THREE.Mesh(new THREE.CylinderGeometry(RW, RW, 0.11, 40, 1, true), new THREE.MeshStandardMaterial({ color: 0x2a2d31, metalness: 0.6, roughness: 0.6, side: THREE.DoubleSide }));
+        llanta.castShadow = llanta.receiveShadow = true; rueda.add(llanta);
+        for (let k = 0; k < 18; k++) {                                         // tacos de la banda
+          const a = k / 18 * Math.PI * 2, t = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.11, 0.012), negro);
+          t.position.set(Math.cos(a) * RW, 0, Math.sin(a) * RW); t.rotation.y = -a; t.castShadow = true; rueda.add(t);
+        }
+        for (const s of [-1, 1]) {
+          const tapa = new THREE.Mesh(new THREE.CircleGeometry(RW * 0.92, 40), metal); tapa.position.y = s * 0.055; tapa.rotation.x = s * -Math.PI / 2; rueda.add(tapa);
+        }
+        const buje = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.13, 20), negro); rueda.add(buje);
+        barra([x, sy * 0.42, ZW + 0.02], [x, yw, ZW], 0.02);
+      }
+    }
+    this.ruedas = ruedas;
+    // mastil con cabeza de camaras estereo (detras a la derecha, sin tapar la vista de cabina)
+    barra([-0.2, -0.28, 0], [-0.2, -0.28, 0.42], 0.018);
+    const cabeza = caja(0.07, 0.2, 0.07, -0.2, -0.28, 0.46, alu);
+    for (const s of [-1, 1]) {
+      const lente = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.02, 20), new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.2, roughness: 0.05 }));
+      lente.rotation.z = Math.PI / 2; lente.position.set(0.04, s * 0.06, 0); cabeza.add(lente);
+    }
+    // antena de alta ganancia y panel solar
+    barra([-0.2, 0.3, 0], [-0.2, 0.3, 0.16], 0.012);
+    const plato = new THREE.Mesh(new THREE.SphereGeometry(0.1, 32, 12, 0, Math.PI * 2, 0, Math.PI * 0.32), new THREE.MeshStandardMaterial({ color: 0xe8e8e8, metalness: 0.3, roughness: 0.5, side: THREE.DoubleSide }));
+    plato.position.set(-0.2, 0.3, 0.16); plato.rotation.set(-0.9, 0.5, 0); plato.castShadow = true; g.add(plato);
+    const panel = caja(0.5, 0.74, 0.012, -0.44, 0, 0.02, new THREE.MeshStandardMaterial({ map: texSolar(), metalness: 0.5, roughness: 0.25 }));
+    panel.rotation.y = 0.32;
+    // luces de posicion
+    for (const sy of [-1, 1]) {
+      const l = new THREE.Mesh(new THREE.SphereGeometry(0.012, 12, 8), new THREE.MeshBasicMaterial({ color: sy > 0 ? 0x32d74b : 0xff3b30 }));
+      l.position.set(0.7, sy * 0.36, -0.03); g.add(l);
+    }
   }
 
   aPantalla(x, y, z) {        // marco robot -> pixeles de la ventana (o null si queda detras)

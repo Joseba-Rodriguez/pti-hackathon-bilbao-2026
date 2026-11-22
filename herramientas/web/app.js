@@ -285,10 +285,20 @@ function rotarDato() { const el = $('datoRot'); el.style.opacity = 0; setTimeout
 rotarDato(); setInterval(rotarDato, 9000);
 
 // ============================================================ vistas de camara
-document.querySelectorAll('#vistas button').forEach((b) => b.onclick = () => {
-  document.querySelectorAll('#vistas button').forEach((x) => x.classList.toggle('on', x === b));
+document.querySelectorAll('#vistas button[data-v]').forEach((b) => b.onclick = () => {
+  document.querySelectorAll('#vistas button[data-v]').forEach((x) => x.classList.toggle('on', x === b));
   celda.vista(b.dataset.v);
 });
+// escenario secundario: rover y astronauta en la Luna (el brazo, el laser y los datos son los mismos)
+function ponerEscenario(nombre) {
+  const luna = celda.escenario(nombre) === 'luna';
+  const b = $('bEscenario'); b.classList.toggle('on', luna); b.querySelector('span').textContent = luna ? 'Laboratorio' : 'Luna';
+  b.title = luna ? 'Volver a la celda caliente' : 'Escenario secundario: rover en la Luna';
+  $('etqOper').querySelector('b').textContent = luna ? 'Astronauta · EVA' : 'Operador · cabina';
+  $('etqOper').querySelector('small').textContent = luna ? 'Fuera del rover · traje presurizado' : 'Fuera de la celda · 0,00 µSv';
+  $('etqVaso').querySelector('b').textContent = luna ? 'Muestra · mineral L-07' : 'U-235 · #U-0347';
+}
+$('bEscenario').onclick = () => ponerEscenario(celda.escenarioActual === 'luna' ? 'lab' : 'luna');
 
 // ============================================================ arranque
 let entrado = false;
@@ -305,7 +315,8 @@ let entrado = false;
   $('btnEntrar').disabled = false;
   if (directo) entrar(false);
   const v = new URLSearchParams(location.search).get('vista');      // ?vista=cenital|lateral|pinza
-  if (v && celda) { celda.vista(v, true); document.querySelectorAll('#vistas button').forEach((x) => x.classList.toggle('on', x.dataset.v === v)); }
+  if (v && celda) { celda.vista(v, true); document.querySelectorAll('#vistas button[data-v]').forEach((x) => x.classList.toggle('on', x.dataset.v === v)); }
+  if (new URLSearchParams(location.search).get('escenario') === 'luna') ponerEscenario('luna');
 })();
 function entrar(conVoz = true) {
   $('arranque').classList.add('oculta');
