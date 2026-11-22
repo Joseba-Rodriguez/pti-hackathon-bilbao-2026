@@ -1,5 +1,9 @@
 # Plan paso a paso: el robot lleva el cubilete a donde apunta el láser
 
+> **Documento histórico (fase 1, viernes 20).** Este plan de dos zonas con una política por zona se
+> sustituyó por una sola política que sigue el láser (`herramientas/lerobot_laser.py`). El estado final
+> está en [INSTALAR.md](INSTALAR.md) y la evolución en [DIARIO.md](DIARIO.md).
+
 **Prueba fácil (fase 1):** el cubilete empieza siempre en **INICIO**. Hay **2 zonas de destino, A y B**.
 Apuntáis con el láser a una zona, el programa la reconoce en el mapa virtual y el robot ejecuta la
 habilidad entrenada para esa zona: **«llevar a A»** o **«llevar a B»** (dos políticas ACT).

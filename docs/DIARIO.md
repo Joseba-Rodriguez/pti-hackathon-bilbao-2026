@@ -90,10 +90,10 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 | coger_v2 | 5000 | no | 1/5 | tiembla mucho |
 | coger_v7 | 20000 | sí | coger ~9/10 | deja siempre en el mismo sitio (no mira el láser); 1 lanzamiento |
 
-### Mapa de calor: d�nde se solt� el bote en `pti_coger_v7`
+### Mapa de calor: dónde se soltó el bote en `pti_coger_v7`
 - ![mapa de calor](img/mapa_calor_sueltas_v7.png)
-- M�todo: final del tramo �pinza � 20� (bote sujeto) + punta del brazo naranja en la c�mara cenital. 35 de 50 episodios fiables.
-- Resultado: **3 grupos** (derecha, cerca del robot: ~13; abajo-izquierda: ~13; arriba-centro: ~6). Fila lejana casi vac�a (1) y centro vac�o.
+- Método: final del tramo «pinza ≈ 20» (bote sujeto) + punta del brazo naranja en la cámara cenital. 35 de 50 episodios fiables.
+- Resultado: **3 grupos** (derecha, cerca del robot: ~13; abajo-izquierda: ~13; arriba-centro: ~6). Fila lejana casi vacía (1) y centro vacío.
 - Para el modelo 2: repartir los destinos por toda la mesa, sobre todo la fila lejana y el centro.
 
 
@@ -132,8 +132,7 @@ Todo lo que hacemos, en orden. Sirve para no repetir errores y para el pitch
 - **`todo_v3`** en la nube: desde `todo_v1`, `pti_todo_v2` (123 ep.), **25 000 pasos** (~2 épocas). Job `6b01c756efaf5e14f4b5b759`. `todo_v1` sigue siendo el de la demo hasta que v3 gane.
 
 
-- **`todo_v3` terminado** (~18:40): `Josebarv01/act_pti_todo_v3` → `lerobot\outputs
-ube	odo_v3`; carga en el portátil. Pendiente: 10 intentos v1 vs v3 en los mismos puntos.
+- **`todo_v3` terminado** (~18:40): `Josebarv01/act_pti_todo_v3` → `lerobot\outputs\nube\todo_v3`; carga en el portátil. Pendiente: 10 intentos v1 vs v3 en los mismos puntos.
 
 ### Análisis de por qué v2/v3 no sueltan donde toca (~20:00)
 - Descartado (comprobado sin mover el brazo): Hz (grabado a 30, rollout a 29,6–29,7), calibración (sin cambios desde el 20-nov 19:55), escena (cartulina ±2 px, mismo brillo), filtro del láser (sin cambios), arquitectura (igual en v1/v2/v3).

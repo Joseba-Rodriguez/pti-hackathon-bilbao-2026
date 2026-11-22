@@ -1,21 +1,35 @@
-# Local o pesado: no va al repositorio
+# Dependencias locales y artefactos pesados (no van al repositorio)
 lerobot/
 hf_cache/
-_descargas/
 outputs/
+_descargas/
+_copias/
 piezas/_anteriores/
-# calibracion propia de cada puesto
+
+# Calibración y salidas generadas en cada puesto
 app/calibracion.json
 app/calibracion_foto.png
 tests/vista_prueba.png
+resultados/
+
+# Python
 __pycache__/
 *.pyc
+.venv/
+
+# Secretos y configuración local
 .env
-# notas privadas
+.claude/
 CLAUDE.md
-_copias/
-# videos y capturas personales (el repo es publico)
+
+# Vídeos y capturas originales (los GIF de la demo están en docs/media/)
 /*.mp4
 input/
 _videos/
+
+# Repositorio aparte (vídeo de presentación)
 pti-lerobot-intro/
+
+# Sistema
+.DS_Store
+Thumbs.db

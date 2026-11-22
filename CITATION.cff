@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "Si usas este trabajo, puedes citarlo así."
+title: "PTI: Tú apuntas. El robot hace el resto"
+abstract: >-
+  Brazo SO-101 guiado por un puntero láser con una política ACT aprendida por imitación con LeRobot.
+  Proyecto del Physical AI Hackathon Bilbao 2026.
+authors:
+  - name: "Equipo PTI"
+date-released: 2026-11-22
+license: MIT
+repository-code: "https://github.com/Joseba-Rodriguez/pti-hackathon-bilbao-2026"
+keywords:
+  - robotics
+  - imitation-learning
+  - lerobot
+  - act
+  - so-101

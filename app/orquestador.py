@@ -1,5 +1,9 @@
 """El robot lleva el cubilete a donde apunta el laser.
 
+FASE 1 (historico): una politica ACT por zona de destino. La demo final usa una sola politica que
+sigue el laser (herramientas/lerobot_laser.py + herramientas/gemelo.py); este archivo se conserva
+como referencia del primer diseno (ver docs/PLAN.md).
+
 Bucle:
   1. La camara busca el punto del laser en el mapa virtual.
   2. Si se queda quieto ~1 s dentro de una zona (A, B...), esa es el destino.
